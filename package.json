@@ -1,0 +1,52 @@
+{
+  "name": "acces-studio",
+  "version": "1.0.0",
+  "description": "Free offline no-code desktop video creation studio",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"electron .\"",
+    "build": "vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@remotion/bundler": "^4.0.0",
+    "@remotion/player": "^4.0.0",
+    "@remotion/renderer": "^4.0.0",
+    "archiver": "^6.0.0",
+    "chokidar": "^3.6.0",
+    "comlink": "^4.4.1",
+    "dotenv": "^16.4.5",
+    "electron-is-dev": "^3.0.0",
+    "ffbinaries": "^1.1.6",
+    "ffmpeg-static": "^5.2.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "fs-extra": "^11.2.0",
+    "monaco-editor": "^0.50.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0",
+    "simple-git": "^3.25.0"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^3.6.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.4",
+    "vite": "^5.3.1"
+  },
+  "build": {
+    "appId": "com.acces.studio",
+    "productName": "Acces Studio",
+    "win": {
+      "target": "nsis"
+    },
+    "asarUnpack": [
+      "node_modules/ffmpeg-static/**",
+      "node_modules/ffbinaries/**"
+    ]
+  }
+}

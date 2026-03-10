@@ -1,0 +1,232 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Theme variables */
+:root {
+  --bg: #121212;
+  --surface: #1A1A1A;
+  --panel: #242424;
+  --border: #2E2E2E;
+  --text: #F5F5F5;
+  --muted: #888888;
+  --primary: #7C3AED;
+  --glass: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+:root.light {
+  --bg: #F5F5F5;
+  --surface: #FFFFFF;
+  --panel: #F0F0F0;
+  --border: #E0E0E0;
+  --text: #121212;
+  --muted: #666666;
+  --primary: #7C3AED;
+  --glass: rgba(0, 0, 0, 0.03);
+  --glass-border: rgba(0, 0, 0, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Selection */
+::selection {
+  background: #7C3AED44;
+  color: var(--text);
+}
+
+/* Glassmorphism */
+.glass {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+}
+
+/* Theme aware utilities */
+.bg-theme { background: var(--bg); }
+.bg-surface-theme { background: var(--surface); }
+.bg-panel-theme { background: var(--panel); }
+.border-theme { border-color: var(--border); }
+.text-theme { color: var(--text); }
+.text-muted-theme { color: var(--muted); }
+
+/* Timeline */
+.timeline-track {
+  height: 40px;
+  background: var(--panel);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.timeline-clip {
+  position: absolute;
+  height: 100%;
+  background: #7C3AED44;
+  border: 1px solid #7C3AED;
+  border-radius: 4px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 11px;
+  color: var(--text);
+  user-select: none;
+}
+
+.timeline-clip:active {
+  cursor: grabbing;
+}
+
+/* Canvas */
+.canvas-wrapper {
+  background: repeating-conic-gradient(var(--panel) 0% 25%, var(--bg) 0% 50%) 0 0 / 20px 20px;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Drag and drop */
+.drag-over {
+  border: 2px dashed var(--primary) !important;
+  background: #7C3AED11 !important;
+}
+
+/* Buttons */
+.btn-primary {
+  @apply bg-primary hover:bg-purple-700 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-150;
+}
+
+.btn-secondary {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--border);
+}
+
+.btn-ghost {
+  color: var(--muted);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* Input */
+.input {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 14px;
+  width: 100%;
+  transition: border-color 0.15s ease;
+  outline: none;
+  font-family: 'Inter', sans-serif;
+}
+
+.input:focus {
+  border-color: var(--primary);
+}
+
+/* Glow effect */
+.glow {
+  box-shadow: 0 0 20px #7C3AED44;
+}
+
+.glow:hover {
+  box-shadow: 0 0 30px #7C3AED66;
+}
+
+/* Live indicator */
+.live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22C55E;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* Floating pill */
+.pill {
+  background: var(--glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 50px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
