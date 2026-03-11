@@ -53,13 +53,42 @@ export default function App() {
           <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
             Acces Studio
           </span>
+
+          {/* Toggle switch */}
           <button
             onClick={toggleTheme}
-            style={{ color: 'var(--muted)' }}
-            className="text-sm hover:opacity-80 transition-opacity px-1"
             title="Toggle theme"
+            style={{
+              width: 40,
+              height: 22,
+              borderRadius: 50,
+              background: theme === 'light' ? 'var(--primary)' : 'var(--border)',
+              position: 'relative',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background 0.2s ease',
+              flexShrink: 0,
+            }}
           >
-            {theme === 'dark' ? '☀️' : '🌙'}
+            {/* Knob */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 3,
+                left: theme === 'light' ? 21 : 3,
+                width: 16,
+                height: 16,
+                borderRadius: '50%',
+                background: '#FFFFFF',
+                transition: 'left 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 9,
+              }}
+            >
+              {theme === 'light' ? '☀️' : '🌙'}
+            </div>
           </button>
         </div>
 

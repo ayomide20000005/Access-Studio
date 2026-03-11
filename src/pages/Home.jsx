@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import TemplateCard from '../components/TemplateCard'
+import TemplateManager from '../components/TemplateManager'
+import TemplateGuide from './TemplateGuide'
+import { useTemplates } from '../hooks/useTemplates'
 
 const templates = [
   {
@@ -91,6 +94,16 @@ export default function Home({ onTemplateSelect, theme }) {
   const [activeTab, setActiveTab] = useState('templates')
   const [page, setPage] = useState(0)
   const [hoveredId, setHoveredId] = useState(null)
+  const [showGuide, setShowGuide] = useState(false)
+
+  const {
+    userTemplates,
+    loading,
+    error,
+    importTemplate,
+    deleteTemplate,
+    updateTemplate,
+  } = useTemplates()
 
   const filtered = templates.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -103,6 +116,13 @@ export default function Home({ onTemplateSelect, theme }) {
   const handleSearch = (val) => {
     setSearch(val)
     setPage(0)
+  }
+
+  const handleImport = async () => {
+    const template = await importTemplate()
+    if (template) {
+      setActiveTab('my templates')
+    }
   }
 
   return (
@@ -139,6 +159,7 @@ export default function Home({ onTemplateSelect, theme }) {
             style={{ height: 34 }}
           />
           <button
+            onClick={handleImport}
             className="flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg transition-all duration-150"
             style={{
               background: 'var(--panel)',
@@ -149,34 +170,20 @@ export default function Home({ onTemplateSelect, theme }) {
             ⬆ Import Template
           </button>
           <button
-            className="flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg"
-            style={{ background: 'var(--primary)', color: '#fff' }}
+            onClick={() => setShowGuide(true)}
+            className="flex items-center gap-2 text-xs font-medium px-3 py-2 rounded-lg transition-all duration-150"
+            style={{
+              background: 'var(--panel)',
+              border: '1px solid var(--border)',
+              color: 'var(--text)',
+            }}
           >
-            💎 Brand Kit
+            📖 Build a Template
           </button>
         </div>
 
-        {/* Right — Window controls */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={() => window.electron.minimize()}
-            className="w-3 h-3 rounded-full transition-opacity hover:opacity-70"
-            style={{ background: '#F59E0B' }}
-            title="Minimize"
-          />
-          <button
-            onClick={() => window.electron.maximize()}
-            className="w-3 h-3 rounded-full transition-opacity hover:opacity-70"
-            style={{ background: '#22C55E' }}
-            title="Maximize"
-          />
-          <button
-            onClick={() => window.electron.close()}
-            className="w-3 h-3 rounded-full transition-opacity hover:opacity-70"
-            style={{ background: '#DC2626' }}
-            title="Close"
-          />
-        </div>
+        {/* Right — empty to balance layout */}
+        <div style={{ width: 120 }} />
       </div>
 
       {/* Hero */}
@@ -202,15 +209,17 @@ export default function Home({ onTemplateSelect, theme }) {
               border: `1px solid ${activeTab === tab ? 'var(--primary)' : 'var(--border)'}`,
             }}
           >
-            {tab === 'templates' ? '✦ Templates' : '👤 My Templates'}
+            {tab === 'templates' ? '✦ Templates' : `📦 My Templates${userTemplates.length > 0 ? ` (${userTemplates.length})` : ''}`}
           </button>
         ))}
-        <span className="text-xs ml-3" style={{ color: 'var(--muted)' }}>
-          {filtered.length} available
-        </span>
+        {activeTab === 'templates' && (
+          <span className="text-xs ml-3" style={{ color: 'var(--muted)' }}>
+            {filtered.length} available
+          </span>
+        )}
       </div>
 
-      {/* Grid */}
+      {/* Content */}
       <div className="flex-1 px-8 overflow-hidden">
         {activeTab === 'templates' && (
           <>
@@ -245,23 +254,15 @@ export default function Home({ onTemplateSelect, theme }) {
         )}
 
         {activeTab === 'my templates' && (
-          <div
-            className="flex flex-col items-center justify-center h-full"
-            style={{ color: 'var(--muted)' }}
-          >
-            <span className="text-4xl mb-4">📁</span>
-            <p className="text-sm mb-3">No custom templates yet</p>
-            <button
-              className="text-xs px-4 py-2 rounded-lg"
-              style={{
-                background: 'var(--panel)',
-                border: '1px solid var(--border)',
-                color: 'var(--text)',
-              }}
-            >
-              ⬆ Import Your First Template
-            </button>
-          </div>
+          <TemplateManager
+            userTemplates={userTemplates}
+            loading={loading}
+            error={error}
+            onImport={handleImport}
+            onDelete={deleteTemplate}
+            onUpdate={updateTemplate}
+            onSelect={onTemplateSelect}
+          />
         )}
       </div>
 
@@ -312,6 +313,9 @@ export default function Home({ onTemplateSelect, theme }) {
 
         <span className="text-xs" style={{ color: 'var(--muted)' }}>⚡ Offline Ready</span>
       </div>
+
+      {/* Template Guide Modal */}
+      {showGuide && <TemplateGuide onClose={() => setShowGuide(false)} />}
     </div>
   )
 }

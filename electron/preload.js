@@ -3,6 +3,7 @@ const { contextBridge, ipcRenderer } = require('electron')
 contextBridge.exposeInMainWorld('electron', {
   // Dialog
   openFile: (filters) => ipcRenderer.invoke('dialog:openFile', filters),
+  openFolder: () => ipcRenderer.invoke('dialog:openFolder'),
   saveFile: (filters) => ipcRenderer.invoke('dialog:saveFile', filters),
 
   // Window controls
@@ -24,6 +25,12 @@ contextBridge.exposeInMainWorld('electron', {
   importAsset: (filePath) => ipcRenderer.invoke('asset:import', filePath),
   listAssets: () => ipcRenderer.invoke('asset:list'),
   deleteAsset: (filePath) => ipcRenderer.invoke('asset:delete', filePath),
+
+  // Templates
+  importTemplate: (folderPath) => ipcRenderer.invoke('template:import', folderPath),
+  listTemplates: () => ipcRenderer.invoke('template:list'),
+  deleteTemplate: (templateId) => ipcRenderer.invoke('template:delete', templateId),
+  updateTemplate: (templateId, updates) => ipcRenderer.invoke('template:update', { templateId, updates }),
 
   // Events
   on: (channel, callback) => {

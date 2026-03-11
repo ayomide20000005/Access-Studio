@@ -1,10 +1,11 @@
 const { ipcMain, app } = require('electron')
 const path = require('path')
-const { execFile, spawn } = require('child_process')
+const { execFile } = require('child_process')
+const { Worker } = require('worker_threads')
 const fs = require('fs-extra')
 const ffmpegPath = require('ffmpeg-static')
 
-// Helper to run ffmpeg commands
+// Legacy FFmpeg helper — kept for ffmpeg:export handler
 function runFFmpeg(args, onProgress) {
   return new Promise((resolve, reject) => {
     const proc = execFile(ffmpegPath, args)
@@ -22,86 +23,21 @@ function runFFmpeg(args, onProgress) {
     })
 
     proc.on('close', (code) => {
-      if (code === 0) {
-        resolve()
-      } else {
-        reject(new Error(`FFmpeg exited with code ${code}`))
-      }
+      if (code === 0) resolve()
+      else reject(new Error(`FFmpeg exited with code ${code}`))
     })
 
     proc.on('error', reject)
   })
 }
 
-// Helper to run Remotion renderer — Windows path safe
-function runRemotionRender(options) {
-  return new Promise((resolve, reject) => {
-    const {
-      compositionId,
-      outputPath,
-      props,
-      durationInFrames,
-      fps,
-      width,
-      height,
-    } = options
-
-    const projectRoot = path.join(__dirname, '../../')
-
-    // Use npx to call remotion — avoids Windows bin path spacing issues
-    const args = [
-      'remotion',
-      'render',
-      'remotion/index.js',
-      compositionId,
-      outputPath,
-      '--props', JSON.stringify(props),
-      '--duration-in-frames', String(durationInFrames),
-      '--fps', String(fps),
-      '--width', String(width),
-      '--height', String(height),
-      '--codec', 'h264',
-    ]
-
-    const proc = spawn('npx', args, {
-      cwd: projectRoot,
-      shell: true,
-      windowsHide: true,
-      env: {
-        ...process.env,
-        // Force npm/npx to use short paths on Windows to avoid spacing issues
-        NODE_PATH: path.join(projectRoot, 'node_modules'),
-      },
-    })
-
-    proc.stdout.on('data', (data) => {
-      console.log('[Remotion]', data.toString())
-    })
-
-    proc.stderr.on('data', (data) => {
-      console.error('[Remotion Error]', data.toString())
-    })
-
-    proc.on('close', (code) => {
-      if (code === 0) {
-        resolve(outputPath)
-      } else {
-        reject(new Error(`Remotion renderer exited with code ${code}`))
-      }
-    })
-
-    proc.on('error', reject)
-  })
-}
-
-// Updated resolution map to match new export options
 const resolutionMap = {
   '720p': { width: 1280, height: 720 },
   '1080p': { width: 1920, height: 1080 },
   '4k': { width: 3840, height: 2160 },
 }
 
-// Render composition with Remotion then encode with FFmpeg
+// Main render handler — runs in worker thread so UI never freezes
 ipcMain.handle('ffmpeg:render', async (event, options) => {
   const {
     templateId,
@@ -114,76 +50,56 @@ ipcMain.handle('ffmpeg:render', async (event, options) => {
     duration,
   } = options
 
-  const { width, height } = resolutionMap[resolution] || resolutionMap['1080p']
-  const durationInFrames = (duration || 10) * (parseInt(fps) || 30)
-
-  // Use app userData for temp files — guaranteed no spaces on packaged app
+  const projectRoot = path.join(__dirname, '../../')
   const tempDir = path.join(app.getPath('temp'), 'acces_studio_render')
   const tempVideoPath = path.join(tempDir, `render_${Date.now()}.mp4`)
 
-  try {
-    await fs.ensureDir(tempDir)
+  await fs.ensureDir(tempDir)
 
-    // Stage 1 — Remotion render
-    event.sender.send('export:progress', { progress: 5, stage: 'Starting Remotion render...' })
-
-    await runRemotionRender({
-      compositionId: 'MainComposition',
-      outputPath: tempVideoPath,
-      props: {
+  return new Promise((resolve) => {
+    const worker = new Worker(path.join(__dirname, '../renderWorker.js'), {
+      workerData: {
         templateId,
-        inputs: {
-          ...inputs,
-          fontFamily: 'Inter',
-        },
-        selectedStyles: selectedStyles || {},
+        inputs,
+        selectedStyles,
+        format,
+        resolution,
+        fps,
+        outputPath,
+        duration,
+        projectRoot,
+        tempVideoPath,
       },
-      durationInFrames,
-      fps: parseInt(fps) || 30,
-      width,
-      height,
     })
 
-    event.sender.send('export:progress', { progress: 60, stage: 'Encoding video...' })
-
-    // Stage 2 — FFmpeg encode to final format
-    let args = ['-y', '-i', tempVideoPath]
-
-    if (format === 'gif') {
-      args.push(
-        '-vf', `scale=${width}:${height},fps=15,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse`,
-        '-loop', '0',
-        outputPath
-      )
-    } else {
-      args.push(
-        '-vf', `scale=${width}:${height}`,
-        '-c:v', 'libx264',
-        '-crf', '18',
-        '-preset', 'fast',
-        '-c:a', 'aac',
-        '-b:a', '192k',
-        outputPath
-      )
-    }
-
-    await runFFmpeg(args, (progress) => {
-      const mapped = 60 + Math.round((progress / (duration || 10)) * 35)
-      event.sender.send('export:progress', { progress: Math.min(mapped, 95), stage: 'Encoding...' })
+    worker.on('message', (msg) => {
+      if (msg.type === 'progress') {
+        event.sender.send('export:progress', {
+          progress: msg.progress,
+          stage: msg.stage,
+        })
+      } else if (msg.type === 'complete') {
+        event.sender.send('export:complete', { outputPath: msg.outputPath })
+        resolve({ success: true, outputPath: msg.outputPath })
+      } else if (msg.type === 'error') {
+        event.sender.send('export:error', { error: msg.error })
+        resolve({ success: false, error: msg.error })
+      }
     })
 
-    // Stage 3 — cleanup
-    await fs.remove(tempDir)
+    worker.on('error', (err) => {
+      event.sender.send('export:error', { error: err.message })
+      resolve({ success: false, error: err.message })
+    })
 
-    event.sender.send('export:progress', { progress: 100, stage: 'Done' })
-    event.sender.send('export:complete', { outputPath })
-    return { success: true, outputPath }
-
-  } catch (error) {
-    await fs.remove(tempDir).catch(() => {})
-    event.sender.send('export:error', { error: error.message })
-    return { success: false, error: error.message }
-  }
+    worker.on('exit', (code) => {
+      if (code !== 0) {
+        const msg = `Worker stopped with exit code ${code}`
+        event.sender.send('export:error', { error: msg })
+        resolve({ success: false, error: msg })
+      }
+    })
+  })
 })
 
 // Legacy export handler — kept for compatibility

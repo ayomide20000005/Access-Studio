@@ -4,6 +4,7 @@ const path = require('path')
 // Load IPC handlers
 require('./ipc/ffmpeg')
 require('./ipc/project')
+require('./ipc/templates')
 
 let mainWindow
 
@@ -16,9 +17,9 @@ function createWindow() {
     minWidth: 1200,
     minHeight: 700,
     backgroundColor: '#0F0F0F',
-    titleBarStyle: 'hiddenInset',
     frame: false,
     show: false,
+    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -27,7 +28,6 @@ function createWindow() {
   })
 
   if (isDev) {
-    // Wait for Vite to be ready before loading
     setTimeout(() => {
       mainWindow.loadURL('http://localhost:5173')
     }, 3000)
@@ -37,6 +37,7 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show()
+    mainWindow.maximize()
   })
 
   mainWindow.on('closed', () => {
@@ -62,6 +63,13 @@ ipcMain.handle('dialog:openFile', async (_, filters) => {
     filters: filters || [{ name: 'All Files', extensions: ['*'] }],
   })
   return result.filePaths
+})
+
+ipcMain.handle('dialog:openFolder', async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    properties: ['openDirectory'],
+  })
+  return result.filePaths[0] || null
 })
 
 ipcMain.handle('dialog:saveFile', async (_, filters) => {
