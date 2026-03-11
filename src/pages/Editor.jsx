@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
 import Canvas from '../components/Canvas'
 
@@ -153,7 +153,7 @@ const defaultStyles = (styles) => {
   return defaults
 }
 
-export default function Editor({ template, projectData, onExport, onHome, theme }) {
+export default function Editor({ template, projectData, onProjectUpdate, onExport, onHome, theme }) {
   const fields = templateFields[template?.id] || []
   const styles = templateStyles[template?.id] || {}
   const [inputs, setInputs] = useState(defaultInputs(fields))
@@ -175,6 +175,13 @@ export default function Editor({ template, projectData, onExport, onHome, theme 
       }
     } catch {}
   }, [])
+
+  // Push inputs and selectedStyles up to App every time they change
+  useEffect(() => {
+    if (onProjectUpdate) {
+      onProjectUpdate(inputs, selectedStyles)
+    }
+  }, [inputs, selectedStyles])
 
   const handleInputChange = (key, value) => {
     setInputs(prev => ({ ...prev, [key]: value }))

@@ -7,9 +7,9 @@ const ffmpegPath = require('ffmpeg-static')
 // Helper to run ffmpeg commands
 function runFFmpeg(args, onProgress) {
   return new Promise((resolve, reject) => {
-    const process = execFile(ffmpegPath, args)
+    const proc = execFile(ffmpegPath, args)
 
-    process.stderr.on('data', (data) => {
+    proc.stderr.on('data', (data) => {
       const str = data.toString()
       const timeMatch = str.match(/time=(\d+):(\d+):(\d+\.\d+)/)
       if (timeMatch && onProgress) {
@@ -21,7 +21,7 @@ function runFFmpeg(args, onProgress) {
       }
     })
 
-    process.on('close', (code) => {
+    proc.on('close', (code) => {
       if (code === 0) {
         resolve()
       } else {
@@ -29,11 +29,11 @@ function runFFmpeg(args, onProgress) {
       }
     })
 
-    process.on('error', reject)
+    proc.on('error', reject)
   })
 }
 
-// Helper to run Remotion renderer
+// Helper to run Remotion renderer — Windows path safe
 function runRemotionRender(options) {
   return new Promise((resolve, reject) => {
     const {
@@ -46,9 +46,11 @@ function runRemotionRender(options) {
       height,
     } = options
 
-    const rendererPath = path.join(__dirname, '../../node_modules/.bin/remotion')
+    const projectRoot = path.join(__dirname, '../../')
 
+    // Use npx to call remotion — avoids Windows bin path spacing issues
     const args = [
+      'remotion',
       'render',
       'remotion/index.js',
       compositionId,
@@ -61,9 +63,15 @@ function runRemotionRender(options) {
       '--codec', 'h264',
     ]
 
-    const proc = spawn(rendererPath, args, {
-      cwd: path.join(__dirname, '../../'),
+    const proc = spawn('npx', args, {
+      cwd: projectRoot,
       shell: true,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        // Force npm/npx to use short paths on Windows to avoid spacing issues
+        NODE_PATH: path.join(projectRoot, 'node_modules'),
+      },
     })
 
     proc.stdout.on('data', (data) => {
@@ -108,7 +116,9 @@ ipcMain.handle('ffmpeg:render', async (event, options) => {
 
   const { width, height } = resolutionMap[resolution] || resolutionMap['1080p']
   const durationInFrames = (duration || 10) * (parseInt(fps) || 30)
-  const tempDir = path.join(app.getPath('userData'), 'acces_temp')
+
+  // Use app userData for temp files — guaranteed no spaces on packaged app
+  const tempDir = path.join(app.getPath('temp'), 'acces_studio_render')
   const tempVideoPath = path.join(tempDir, `render_${Date.now()}.mp4`)
 
   try {

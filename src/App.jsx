@@ -29,7 +29,16 @@ export default function App() {
 
   const handleTemplateSelect = (template) => {
     setSelectedTemplate(template)
-    navigateTo('editor')
+    setProjectData({ template, inputs: {}, selectedStyles: {} })
+    setCurrentPage('editor')
+  }
+
+  const handleProjectUpdate = (inputs, selectedStyles) => {
+    setProjectData(prev => ({
+      ...prev,
+      inputs,
+      selectedStyles,
+    }))
   }
 
   return (
@@ -39,36 +48,80 @@ export default function App() {
         className="h-9 flex items-center justify-between px-4 select-none shrink-0"
         style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', WebkitAppRegion: 'drag' }}
       >
-        {/* Window controls */}
-        <div className="flex items-center gap-2" style={{ WebkitAppRegion: 'no-drag' }}>
-          <div
-            className="w-3 h-3 rounded-full bg-red-500 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.electron.close()}
-          />
-          <div
-            className="w-3 h-3 rounded-full bg-yellow-500 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.electron.minimize()}
-          />
-          <div
-            className="w-3 h-3 rounded-full bg-green-500 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => window.electron.maximize()}
-          />
+        {/* Left — App name + theme toggle */}
+        <div className="flex items-center gap-3" style={{ WebkitAppRegion: 'no-drag' }}>
+          <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+            Acces Studio
+          </span>
+          <button
+            onClick={toggleTheme}
+            style={{ color: 'var(--muted)' }}
+            className="text-sm hover:opacity-80 transition-opacity px-1"
+            title="Toggle theme"
+          >
+            {theme === 'dark' ? '☀️' : '🌙'}
+          </button>
         </div>
 
-        {/* App name */}
-        <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
-          Acces Studio
-        </span>
+        {/* Right — Windows style controls */}
+        <div className="flex items-center" style={{ WebkitAppRegion: 'no-drag' }}>
+          {/* Minimize */}
+          <button
+            onClick={() => window.electron.minimize()}
+            className="flex items-center justify-center transition-colors"
+            style={{
+              width: 46,
+              height: 36,
+              color: 'var(--muted)',
+              background: 'transparent',
+              fontSize: 16,
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--panel)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            ─
+          </button>
 
-        {/* Theme toggle */}
-        <button
-          onClick={toggleTheme}
-          style={{ WebkitAppRegion: 'no-drag', color: 'var(--muted)' }}
-          className="text-sm hover:opacity-80 transition-opacity px-2"
-          title="Toggle theme"
-        >
-          {theme === 'dark' ? '☀️' : '🌙'}
-        </button>
+          {/* Maximize */}
+          <button
+            onClick={() => window.electron.maximize()}
+            className="flex items-center justify-center transition-colors"
+            style={{
+              width: 46,
+              height: 36,
+              color: 'var(--muted)',
+              background: 'transparent',
+              fontSize: 12,
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--panel)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            □
+          </button>
+
+          {/* Close */}
+          <button
+            onClick={() => window.electron.close()}
+            className="flex items-center justify-center transition-colors"
+            style={{
+              width: 46,
+              height: 36,
+              color: 'var(--muted)',
+              background: 'transparent',
+              fontSize: 16,
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = '#DC2626'
+              e.currentTarget.style.color = '#FFFFFF'
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = 'transparent'
+              e.currentTarget.style.color = 'var(--muted)'
+            }}
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Page Router */}
@@ -83,6 +136,7 @@ export default function App() {
           <Editor
             template={selectedTemplate}
             projectData={projectData}
+            onProjectUpdate={handleProjectUpdate}
             onExport={() => navigateTo('export')}
             onHome={() => navigateTo('home')}
             theme={theme}
