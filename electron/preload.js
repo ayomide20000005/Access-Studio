@@ -32,6 +32,11 @@ contextBridge.exposeInMainWorld('electron', {
   deleteTemplate: (templateId) => ipcRenderer.invoke('template:delete', templateId),
   updateTemplate: (templateId, updates) => ipcRenderer.invoke('template:update', { templateId, updates }),
 
+  // Previews
+  getBuiltInPreviewPaths: () => ipcRenderer.invoke('preview:getBuiltInPaths'),
+  generateUserTemplatePreview: (templateId, folderPath, compositionId) =>
+    ipcRenderer.invoke('preview:generateUserTemplate', { templateId, folderPath, compositionId }),
+
   // Events
   on: (channel, callback) => {
     const validChannels = ['export:progress', 'export:complete', 'export:error']

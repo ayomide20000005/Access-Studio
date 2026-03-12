@@ -1,6 +1,7 @@
 const { ipcMain, app } = require('electron')
 const path = require('path')
 const fs = require('fs-extra')
+const { getUserTemplatePreviewPath } = require('./previewGenerator')
 
 const TEMPLATES_DIR = path.join(app.getPath('userData'), 'user_templates')
 
@@ -48,7 +49,6 @@ function autoDetectFields(defaultProps) {
 
 function extractDefaultProps(code) {
   try {
-    // Try to find defaultProps object
     const match = code.match(/defaultProps\s*[=:]\s*({[\s\S]*?})\s*[,;\n]/)
     if (!match) return null
     const cleaned = match[1]
@@ -61,7 +61,6 @@ function extractDefaultProps(code) {
 }
 
 function extractPropsFromCode(code) {
-  // Try to find destructured props from function signature
   const fields = []
   const propsMatch = code.match(/(?:export\s+(?:default\s+)?(?:const|function)\s+\w+\s*=?\s*\(?\s*{([^}]+)})/)
   if (propsMatch) {
@@ -88,7 +87,6 @@ function extractPropsFromCode(code) {
 }
 
 function findMainFile(folderPath, files) {
-  // Look for Root.jsx first — our standard
   const priority = ['Root.jsx', 'root.jsx', 'index.jsx', 'Composition.jsx', 'composition.jsx', 'index.js']
   for (const candidate of priority) {
     if (files.includes(candidate)) return path.join(folderPath, candidate)
@@ -133,13 +131,11 @@ ipcMain.handle('template:import', async (_, folderPath) => {
         const code = await fs.readFile(mainFile, 'utf8')
         compositionId = findCompositionId(code)
 
-        // Try defaultProps first
         const defaultProps = extractDefaultProps(code)
         if (defaultProps && Object.keys(defaultProps).length > 0) {
           fields = autoDetectFields(defaultProps)
           detectionMethod = 'autoDetect'
         } else {
-          // Try destructured props
           const propsFields = extractPropsFromCode(code)
           if (propsFields.length > 0) {
             fields = propsFields
@@ -147,7 +143,6 @@ ipcMain.handle('template:import', async (_, folderPath) => {
           }
         }
 
-        // Also scan Composition.jsx if it exists separately
         if (fields.length === 0 && files.includes('Composition.jsx')) {
           const compCode = await fs.readFile(path.join(folderPath, 'Composition.jsx'), 'utf8')
           const compDefaultProps = extractDefaultProps(compCode)
@@ -192,11 +187,8 @@ ipcMain.handle('template:import', async (_, folderPath) => {
       )
     }
 
-    // Check for preview image
-    const previewExists = files.includes('preview.png') || files.includes('preview.jpg')
-    const previewPath = previewExists
-      ? path.join(destPath, files.includes('preview.png') ? 'preview.png' : 'preview.jpg')
-      : null
+    // Read preview image if it exists in the folder
+    const previewPath = await getUserTemplatePreviewPath(destPath)
 
     const template = {
       id: config.id || folderName.toLowerCase().replace(/\s+/g, '-'),
@@ -230,10 +222,7 @@ ipcMain.handle('template:list', async () => {
       const configPath = path.join(TEMPLATES_DIR, folder, 'template.config.json')
       if (await fs.pathExists(configPath)) {
         const config = await fs.readJSON(configPath)
-        const previewPng = path.join(TEMPLATES_DIR, folder, 'preview.png')
-        const previewJpg = path.join(TEMPLATES_DIR, folder, 'preview.jpg')
-        const previewPath = await fs.pathExists(previewPng) ? previewPng
-          : await fs.pathExists(previewJpg) ? previewJpg : null
+        const previewPath = await getUserTemplatePreviewPath(path.join(TEMPLATES_DIR, folder))
 
         templates.push({
           ...config,

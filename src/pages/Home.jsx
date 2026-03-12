@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import TemplateCard from '../components/TemplateCard'
 import TemplateManager from '../components/TemplateManager'
 import TemplateGuide from './TemplateGuide'
@@ -105,6 +105,7 @@ export default function Home({ onTemplateSelect, theme }) {
   const [page, setPage] = useState(0)
   const [hoveredId, setHoveredId] = useState(null)
   const [showGuide, setShowGuide] = useState(false)
+  const [builtInPreviews, setBuiltInPreviews] = useState({})
 
   const {
     userTemplates,
@@ -115,7 +116,29 @@ export default function Home({ onTemplateSelect, theme }) {
     updateTemplate,
   } = useTemplates()
 
-  const filtered = templates.filter(t =>
+  // Load built-in preview paths on mount
+  useEffect(() => {
+    const loadPreviews = async () => {
+      try {
+        const paths = await window.electron.getBuiltInPreviewPaths()
+        if (paths) setBuiltInPreviews(paths)
+      } catch {}
+    }
+
+    loadPreviews()
+
+    // Poll every 10 seconds to pick up newly generated previews
+    const interval = setInterval(loadPreviews, 10000)
+    return () => clearInterval(interval)
+  }, [])
+
+  // Merge built-in preview paths into templates
+  const templatesWithPreviews = templates.map(t => ({
+    ...t,
+    previewPath: builtInPreviews[t.id] || null,
+  }))
+
+  const filtered = templatesWithPreviews.filter(t =>
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.description.toLowerCase().includes(search.toLowerCase())
   )
@@ -318,7 +341,7 @@ export default function Home({ onTemplateSelect, theme }) {
           </div>
         )}
 
-        <span className="text-xs" style={{ color: 'var(--muted)' }}> Offline Ready</span>
+        <span className="text-xs" style={{ color: 'var(--muted)' }}>⚡ Offline Ready</span>
       </div>
 
       {/* Template Guide Modal */}

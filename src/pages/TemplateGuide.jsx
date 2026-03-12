@@ -102,24 +102,47 @@ template.config.json format:
 AVAILABLE FIELD TYPES:
 text, textarea, color, date, number, image, video, audio, toggle, slider, list, font, select, transition, caption
 
-CONVERTING AN EXISTING REMOTION TEMPLATE:
-If you have an existing Remotion template, paste its code below and I will convert it to Acces Studio format. I will:
-1. Identify all hardcoded values (text, colors, images, numbers)
-2. Turn each one into a field in template.config.json
-3. Rewrite the composition to receive them as props
-4. Create the proper index.js and Root.jsx
-5. Only use packages already installed in Acces Studio
-
 Now please help me build a complete Acces Studio template. I want a template for:`
+
+const convertPrompt = `You are helping me convert an existing Remotion template to Acces Studio format.
+
+Acces Studio is a free, offline, no-code desktop video creation app. Here is what you must do:
+
+1. Read the template code I will paste below
+2. Identify every hardcoded value — text, colors, numbers, image paths, font names
+3. Turn each one into a field in template.config.json using the correct field type
+4. Rewrite Composition.jsx to receive all those values as props instead of hardcoding them
+5. Create a proper index.js and Root.jsx following the exact Acces Studio format
+6. Only use packages already installed in Acces Studio:
+   - remotion (core), @remotion/transitions, @remotion/shapes, @remotion/paths
+   - @remotion/google-fonts, @remotion/captions, @remotion/media-utils
+   - react (18), framer-motion, gsap, animejs, d3
+
+Output exactly these 4 files:
+- index.js
+- Root.jsx
+- Composition.jsx
+- template.config.json
+
+Available field types: text, textarea, color, date, number, image, video, audio, toggle, slider, list, font, select, transition, caption
+
+Here is the template code to convert:`
 
 export default function TemplateGuide({ onClose }) {
   const [copied, setCopied] = useState(false)
+  const [copiedConvert, setCopiedConvert] = useState(false)
   const [activeSection, setActiveSection] = useState('overview')
 
   const handleCopy = () => {
     navigator.clipboard.writeText(aiPrompt)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  const handleCopyConvert = () => {
+    navigator.clipboard.writeText(convertPrompt)
+    setCopiedConvert(true)
+    setTimeout(() => setCopiedConvert(false), 2000)
   }
 
   const sections = [
@@ -336,13 +359,13 @@ export default function TemplateGuide({ onClose }) {
             {activeSection === 'converting' && (
               <div className="flex flex-col gap-4">
                 <p className="text-sm" style={{ color: 'var(--text)' }}>
-                  Found a Remotion template online? You can convert it to Acces Studio format using AI in 3 steps.
+                  Found a Remotion template online? Convert it to Acces Studio format using AI in 4 steps.
                 </p>
                 {[
-                  { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder or copy the composition file.' },
-                  { step: '2', title: 'Copy the AI prompt', desc: 'Go to the AI Prompt tab and copy the full prompt. Then paste it into Claude, ChatGPT or any AI.' },
-                  { step: '3', title: 'Paste and describe', desc: 'After the prompt, paste the original template code and tell the AI what changes you want. It will generate a complete Acces Studio compatible template.' },
-                  { step: '4', title: 'Import into Acces Studio', desc: 'Save the generated files into a folder and import it using the Import Template button. Fields appear automatically.' },
+                  { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder or copy the composition file contents.' },
+                  { step: '2', title: 'Copy the descriptive prompt below', desc: 'Click the Copy Descriptive Prompt button below. This tells the AI exactly how to convert the template to Acces Studio format.' },
+                  { step: '3', title: 'Paste into any AI', desc: 'Paste the prompt into Claude, ChatGPT or any AI. Then paste the original template code at the end of the prompt.' },
+                  { step: '4', title: 'Import into Acces Studio', desc: 'Save the 4 generated files into a folder and import it using the Import Template button. Fields appear automatically.' },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -361,13 +384,40 @@ export default function TemplateGuide({ onClose }) {
                     </div>
                   </div>
                 ))}
+
+                {/* Convert prompt */}
+                <div className="flex flex-col gap-3 mt-2">
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                    Copy this prompt, paste it into any AI, then paste your existing Remotion template code at the end.
+                  </p>
+                  <div
+                    className="rounded-xl p-4 text-xs font-mono leading-relaxed"
+                    style={{
+                      background: 'var(--panel)',
+                      border: '1px solid var(--border)',
+                      color: 'var(--muted)',
+                      whiteSpace: 'pre-wrap',
+                      maxHeight: 200,
+                      overflowY: 'auto',
+                    }}
+                  >
+                    {convertPrompt}
+                  </div>
+                  <button
+                    onClick={handleCopyConvert}
+                    className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all glow"
+                    style={{ background: copiedConvert ? '#22C55E' : 'var(--primary)' }}
+                  >
+                    {copiedConvert ? '✅ Copied to Clipboard' : '📋 Copy Descriptive Prompt'}
+                  </button>
+                </div>
               </div>
             )}
 
             {activeSection === 'prompt' && (
               <div className="flex flex-col gap-4">
                 <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                  Copy this prompt and paste it into any AI. Use it to build a new template from scratch or convert an existing Remotion template to Acces Studio format.
+                  Copy this prompt and paste it into any AI. Use it to build a brand new template from scratch for Acces Studio.
                 </p>
                 <div
                   className="rounded-xl p-4 text-xs font-mono leading-relaxed"

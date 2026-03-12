@@ -6,6 +6,8 @@ require('./ipc/ffmpeg')
 require('./ipc/project')
 require('./ipc/templates')
 
+const { getBuiltInPreviewPaths } = require('./ipc/previewGenerator')
+
 let mainWindow
 
 function createWindow() {
@@ -88,3 +90,8 @@ ipcMain.handle('app:maximize', () => {
   }
 })
 ipcMain.handle('app:close', () => mainWindow.close())
+
+// Preview IPC handler
+ipcMain.handle('preview:getBuiltInPaths', async () => {
+  return await getBuiltInPreviewPaths()
+})
