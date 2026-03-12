@@ -2,65 +2,70 @@ import { useState } from 'react'
 
 const FONTS = ['Inter', 'Roboto', 'Poppins', 'Montserrat', 'Playfair Display', 'Oswald', 'Raleway', 'Lato', 'Open Sans', 'Source Sans Pro']
 
-// Duration stepper — no typing, only +/- by 0.5
-function DurationStepper({ value, onChange }) {
-  const safe = (typeof value === 'number' && isFinite(value) && value >= 1) ? value : 10
-  const STEP = 0.5
-  const MIN = 1
-  const MAX = 300
-
+// Generic stepper component
+function Stepper({ value, onChange, step, min, max, display }) {
   const dec = () => {
-    const next = Math.round((safe - STEP) * 10) / 10
-    if (next >= MIN) onChange(next)
+    const next = Math.round((value - step) * 100) / 100
+    if (next >= min) onChange(next)
   }
-
   const inc = () => {
-    const next = Math.round((safe + STEP) * 10) / 10
-    if (next <= MAX) onChange(next)
+    const next = Math.round((value + step) * 100) / 100
+    if (next <= max) onChange(next)
   }
 
   return (
-    <div className="flex items-center gap-0" style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+    <div
+      className="flex items-center"
+      style={{ border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}
+    >
       <button
         onClick={dec}
-        disabled={safe <= MIN}
-        className="flex items-center justify-center text-sm font-bold transition-all"
+        disabled={value <= min}
         style={{
-          width: 36,
+          width: 38,
           height: 36,
           background: 'var(--panel)',
-          color: safe <= MIN ? 'var(--border)' : 'var(--text)',
+          color: value <= min ? 'var(--border)' : 'var(--text)',
           border: 'none',
-          cursor: safe <= MIN ? 'not-allowed' : 'pointer',
           borderRight: '1px solid var(--border)',
+          cursor: value <= min ? 'not-allowed' : 'pointer',
+          fontSize: 16,
+          fontWeight: 700,
+          flexShrink: 0,
         }}
       >
         −
       </button>
       <div
-        className="flex items-center justify-center text-sm font-mono"
         style={{
           flex: 1,
           height: 36,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
           background: 'var(--surface)',
           color: 'var(--text)',
+          fontSize: 13,
+          fontFamily: 'monospace',
           userSelect: 'none',
         }}
       >
-        {safe}s
+        {display(value)}
       </div>
       <button
         onClick={inc}
-        disabled={safe >= MAX}
-        className="flex items-center justify-center text-sm font-bold transition-all"
+        disabled={value >= max}
         style={{
-          width: 36,
+          width: 38,
           height: 36,
           background: 'var(--panel)',
-          color: safe >= MAX ? 'var(--border)' : 'var(--text)',
+          color: value >= max ? 'var(--border)' : 'var(--text)',
           border: 'none',
-          cursor: safe >= MAX ? 'not-allowed' : 'pointer',
           borderLeft: '1px solid var(--border)',
+          cursor: value >= max ? 'not-allowed' : 'pointer',
+          fontSize: 16,
+          fontWeight: 700,
+          flexShrink: 0,
         }}
       >
         +
@@ -223,7 +228,10 @@ function FieldRenderer({ field, value, onChange }) {
         <div className="flex flex-col gap-2">
           {(Array.isArray(value) ? value : []).map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="flex-1 text-xs px-3 py-1.5 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+              <span
+                className="flex-1 text-xs px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              >
                 {item}
               </span>
               <button
@@ -367,7 +375,13 @@ export default function Sidebar({ template, fields, inputs, onInputChange, style
       {/* Scrollable content */}
       <div
         className="flex-1 px-5 py-4 flex flex-col gap-5"
-        style={{ overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}
+        style={{
+          overflowY: 'scroll',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch',
+          scrollbarWidth: 'auto',
+          scrollbarColor: 'var(--muted) var(--panel)',
+        }}
       >
         {/* Style selections */}
         {styles && Object.keys(styles).length > 0 && (
@@ -404,14 +418,33 @@ export default function Sidebar({ template, fields, inputs, onInputChange, style
           </div>
         )}
 
-        {/* Duration — stepper only, no typing */}
+        {/* Duration — steps by 10s */}
         <div>
           <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>
-            Video Duration
+            Duration
           </label>
-          <DurationStepper
-            value={inputs['duration']}
+          <Stepper
+            value={inputs['duration'] ?? 10}
             onChange={val => onInputChange('duration', val)}
+            step={10}
+            min={10}
+            max={300}
+            display={v => `${v}s`}
+          />
+        </div>
+
+        {/* Speed — steps by 0.5x */}
+        <div>
+          <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--muted)' }}>
+            Speed
+          </label>
+          <Stepper
+            value={inputs['speed'] ?? 1}
+            onChange={val => onInputChange('speed', val)}
+            step={0.5}
+            min={0.5}
+            max={4}
+            display={v => `${v}x`}
           />
         </div>
 

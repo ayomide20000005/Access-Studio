@@ -13,7 +13,6 @@ export default function Canvas({
   onTimeChange,
   showTimeline,
 }) {
-  // Guard — Remotion player crashes if durationInFrames is 0, NaN, or negative
   const rawDuration = parseFloat(inputs?.duration)
   const safeDuration = isFinite(rawDuration) && rawDuration >= 1 ? rawDuration : 10
   const durationInFrames = Math.max(1, Math.round(safeDuration * FPS))
@@ -31,17 +30,17 @@ export default function Canvas({
     >
       {/* Canvas area */}
       <div
-        className="flex-1 flex items-center justify-center p-6"
-        style={{ background: 'var(--bg)' }}
+        className="flex-1 flex items-center justify-center"
+        style={{ background: 'var(--bg)', padding: '32px 48px' }}
       >
         <div
-          className="relative rounded-xl overflow-hidden"
           style={{
-            boxShadow: '0 0 0 1px var(--border), 0 24px 64px rgba(0,0,0,0.5)',
-            maxWidth: '100%',
-            maxHeight: '100%',
+            width: '72%',
             aspectRatio: '16/9',
-            width: '100%',
+            borderRadius: 12,
+            overflow: 'hidden',
+            boxShadow: '0 0 0 1px var(--border), 0 24px 64px rgba(0,0,0,0.5)',
+            flexShrink: 0,
           }}
         >
           {template ? (
@@ -60,11 +59,7 @@ export default function Canvas({
           ) : (
             <div
               className="w-full h-full flex flex-col items-center justify-center gap-3"
-              style={{
-                background: 'var(--surface)',
-                color: 'var(--muted)',
-                minHeight: 300,
-              }}
+              style={{ background: 'var(--surface)', color: 'var(--muted)' }}
             >
               <span className="text-4xl">🎬</span>
               <p className="text-sm">Select a template to start</p>
@@ -73,7 +68,7 @@ export default function Canvas({
         </div>
       </div>
 
-      {/* Timeline strip — shown when toggled */}
+      {/* Timeline strip */}
       {showTimeline && (
         <div
           className="h-16 flex items-center px-6 gap-4 shrink-0"
