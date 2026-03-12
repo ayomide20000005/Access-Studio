@@ -1,17 +1,73 @@
 import { useState } from 'react'
 
-const prompt = `You are helping me build a custom video template for Acces Studio — a no-code desktop video creation app built with Electron, React, and Remotion.
+const aiPrompt = `You are helping me build a custom video template for Acces Studio — a free, offline, no-code desktop video creation app built with Electron, React, and Remotion.
 
-Here is how Acces Studio templates work:
+IMPORTANT: Acces Studio already has these packages installed. Your template must ONLY use these — no npm install needed:
+- remotion (core) — useCurrentFrame, useVideoConfig, interpolate, spring, AbsoluteFill, Sequence, Audio, Video, Img, staticFile
+- @remotion/transitions — TransitionSeries, linearTiming, springTiming + transitions: fade, slide, wipe, flip, clockWipe, none
+- @remotion/shapes — Triangle, Circle, Rect, Star, Ellipse
+- @remotion/paths — evolvePath, getLength, getPointAtLength
+- @remotion/google-fonts — loadFont
+- @remotion/captions — Caption component for subtitles
+- @remotion/media-utils — getVideoMetadata, getAudioData
+- react (18) — useState, useEffect, useRef, useMemo, useCallback
+- framer-motion — motion components and animations
+- gsap — GreenSock animation library
+- animejs — anime.js animations
+- d3 — data visualization
 
-FOLDER STRUCTURE:
+FOLDER STRUCTURE (create exactly this):
 my-template/
-  index.js                  ← Remotion entry point that registers the composition
-  MyComposition.jsx         ← The actual Remotion composition
-  template.config.json      ← Config file that defines the input fields
-  preview.png               ← A screenshot of the template (optional)
+  index.js                    ← Remotion entry point
+  Root.jsx                    ← Registers the composition
+  Composition.jsx             ← The actual animation
+  template.config.json        ← Fields and styles config
+  preview.png                 ← Optional screenshot
 
-TEMPLATE CONFIG FORMAT (template.config.json):
+index.js MUST look exactly like this:
+\`\`\`javascript
+import { registerRoot } from 'remotion'
+import { Root } from './Root'
+registerRoot(Root)
+\`\`\`
+
+Root.jsx MUST look exactly like this:
+\`\`\`jsx
+import { Composition } from 'remotion'
+import { MyComposition } from './Composition'
+
+export const Root = () => {
+  return (
+    <Composition
+      id="MyComposition"
+      component={MyComposition}
+      durationInFrames={300}
+      fps={30}
+      width={1920}
+      height={1080}
+      defaultProps={{
+        // all your default prop values here
+      }}
+    />
+  )
+}
+\`\`\`
+
+Composition.jsx receives ALL field values as props directly:
+\`\`\`jsx
+export const MyComposition = ({
+  title = 'Default Title',
+  primaryColor = '#7C3AED',
+  // ... all fields from config
+}) => {
+  const frame = useCurrentFrame()
+  const { fps, durationInFrames, width, height } = useVideoConfig()
+  // your animation logic here
+}
+\`\`\`
+
+template.config.json format:
+\`\`\`json
 {
   "id": "my-template",
   "name": "My Template",
@@ -21,46 +77,38 @@ TEMPLATE CONFIG FORMAT (template.config.json):
   "composition": "MyComposition",
   "fields": [
     { "key": "title", "label": "Title", "type": "text", "placeholder": "e.g. Your Title", "required": true },
-    { "key": "description", "label": "Description", "type": "textarea", "placeholder": "e.g. Your Description" },
+    { "key": "description", "label": "Description", "type": "textarea", "placeholder": "e.g. Description" },
     { "key": "primaryColor", "label": "Primary Color", "type": "color", "default": "#7C3AED" },
-    { "key": "launchDate", "label": "Launch Date", "type": "date" },
     { "key": "logoPath", "label": "Logo", "type": "image" },
+    { "key": "backgroundMusic", "label": "Music", "type": "audio" },
     { "key": "backgroundVideo", "label": "Background Video", "type": "video" },
-    { "key": "backgroundMusic", "label": "Background Music", "type": "audio" },
+    { "key": "launchDate", "label": "Date", "type": "date" },
+    { "key": "count", "label": "Count", "type": "number", "min": 0, "max": 100 },
     { "key": "showSubtitle", "label": "Show Subtitle", "type": "toggle", "default": true },
-    { "key": "animationSpeed", "label": "Animation Speed", "type": "slider", "min": 0.5, "max": 3, "step": 0.1, "default": 1 },
-    { "key": "features", "label": "Features", "type": "list", "placeholder": "Add a feature" },
+    { "key": "animationSpeed", "label": "Speed", "type": "slider", "min": 0.5, "max": 3, "step": 0.1, "default": 1 },
+    { "key": "features", "label": "Features", "type": "list", "placeholder": "Add feature" },
     { "key": "fontFamily", "label": "Font", "type": "font" },
-    { "key": "count", "label": "Count", "type": "number", "placeholder": "e.g. 10" }
+    { "key": "platform", "label": "Platform", "type": "select", "options": ["instagram", "tiktok", "youtube"] },
+    { "key": "transitionType", "label": "Transition", "type": "transition" },
+    { "key": "subtitles", "label": "Subtitles", "type": "caption" }
   ],
   "styles": {
     "mood": ["Energetic", "Calm", "Professional"],
     "pace": ["Fast", "Medium", "Slow"]
   }
 }
+\`\`\`
 
 AVAILABLE FIELD TYPES:
-- text — single line text input
-- textarea — multi line text input
-- color — color picker
-- date — date picker
-- image — image file upload
-- video — video file upload
-- audio — audio file upload
-- toggle — on/off switch
-- slider — number range slider
-- list — multi item list
-- font — font family picker
-- number — number input
-- select — dropdown with options
+text, textarea, color, date, number, image, video, audio, toggle, slider, list, font, select, transition, caption
 
-HOW THE REMOTION COMPOSITION RECEIVES PROPS:
-All field values are passed directly as props to your composition. For example if you have a field with key "title" then your composition receives it as:
-const MyComposition = ({ title, primaryColor, logoPath }) => { ... }
-
-The composition must also handle these default style props that Acces Studio passes automatically:
-- fontFamily
-- Any styles defined in the "styles" section of config
+CONVERTING AN EXISTING REMOTION TEMPLATE:
+If you have an existing Remotion template, paste its code below and I will convert it to Acces Studio format. I will:
+1. Identify all hardcoded values (text, colors, images, numbers)
+2. Turn each one into a field in template.config.json
+3. Rewrite the composition to receive them as props
+4. Create the proper index.js and Root.jsx
+5. Only use packages already installed in Acces Studio
 
 Now please help me build a complete Acces Studio template. I want a template for:`
 
@@ -69,7 +117,7 @@ export default function TemplateGuide({ onClose }) {
   const [activeSection, setActiveSection] = useState('overview')
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(prompt)
+    navigator.clipboard.writeText(aiPrompt)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -79,6 +127,7 @@ export default function TemplateGuide({ onClose }) {
     { id: 'structure', label: 'Folder Structure' },
     { id: 'config', label: 'Config File' },
     { id: 'fields', label: 'Field Types' },
+    { id: 'converting', label: 'Convert Template' },
     { id: 'prompt', label: 'AI Prompt' },
   ]
 
@@ -113,7 +162,7 @@ export default function TemplateGuide({ onClose }) {
                 Build a Template
               </h2>
               <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                Everything you need to create a custom Acces Studio template
+                Everything you need to create or convert a template for Acces Studio
               </p>
             </div>
             <button
@@ -127,7 +176,7 @@ export default function TemplateGuide({ onClose }) {
 
           {/* Tabs */}
           <div
-            className="flex items-center gap-1 px-6 py-3 shrink-0"
+            className="flex items-center gap-1 px-6 py-3 shrink-0 flex-wrap"
             style={{ borderBottom: '1px solid var(--border)' }}
           >
             {sections.map(s => (
@@ -149,19 +198,20 @@ export default function TemplateGuide({ onClose }) {
           {/* Body */}
           <div
             className="flex-1 px-6 py-5"
-            style={{ overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}
+            style={{ overflowY: 'auto', overflowX: 'hidden' }}
           >
             {activeSection === 'overview' && (
               <div className="flex flex-col gap-4">
                 <p className="text-sm leading-relaxed" style={{ color: 'var(--text)' }}>
-                  Acces Studio templates are Remotion compositions packaged in a folder with a config file. Anyone can build one — you do not need to know Remotion deeply. You can use an AI to generate the full template for you.
+                  Acces Studio templates are Remotion compositions packaged in a folder. No npm install needed — all dependencies come from Acces Studio itself. Build one from scratch or convert any existing Remotion template using AI.
                 </p>
                 <div className="flex flex-col gap-3">
                   {[
-                    { icon: '📁', title: 'Create a folder', desc: 'Your template lives in a single folder with a few files inside.' },
-                    { icon: '⚙️', title: 'Add a config file', desc: 'A template.config.json file tells Acces Studio what input fields to show.' },
-                    { icon: '🎬', title: 'Write the composition', desc: 'A Remotion composition that receives the user inputs as props and renders the video.' },
-                    { icon: '📦', title: 'Import into Acces Studio', desc: 'Drop the folder into Acces Studio via the Import Template button. Done.' },
+                    { icon: '📁', title: 'Create a folder', desc: 'Your template lives in a folder with 4 files — index.js, Root.jsx, Composition.jsx, and template.config.json.' },
+                    { icon: '⚙️', title: 'Define your fields', desc: 'The config file tells Acces Studio what inputs to show — text, color, image, video, audio, toggle, slider and more.' },
+                    { icon: '🎬', title: 'Write the animation', desc: 'A Remotion composition that uses useCurrentFrame, interpolate, spring and all installed packages to create the animation.' },
+                    { icon: '📦', title: 'Import into Acces Studio', desc: 'Drop the folder into Acces Studio via Import Template. Fields appear automatically. No code needed to use it.' },
+                    { icon: '🔄', title: 'Convert existing templates', desc: 'Found a Remotion template online? Copy the code, paste into the AI prompt and it converts it to Acces Studio format automatically.' },
                   ].map((item, i) => (
                     <div
                       key={i}
@@ -181,26 +231,33 @@ export default function TemplateGuide({ onClose }) {
 
             {activeSection === 'structure' && (
               <div className="flex flex-col gap-4">
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>Your template folder should look like this:</p>
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>Your template folder must look exactly like this:</p>
                 <div
                   className="rounded-xl p-4 font-mono text-sm"
                   style={{ background: 'var(--panel)', border: '1px solid var(--border)', color: 'var(--text)', lineHeight: 2 }}
                 >
                   <div>📁 my-template/</div>
-                  <div style={{ paddingLeft: 24 }}>📄 index.js <span style={{ color: 'var(--muted)', fontSize: 11 }}>← Remotion entry point</span></div>
-                  <div style={{ paddingLeft: 24 }}>📄 MyComposition.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← The actual composition</span></div>
-                  <div style={{ paddingLeft: 24 }}>📄 template.config.json <span style={{ color: 'var(--muted)', fontSize: 11 }}>← Required config file</span></div>
-                  <div style={{ paddingLeft: 24 }}>🖼 preview.png <span style={{ color: 'var(--muted)', fontSize: 11 }}>← Optional preview image</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 index.js <span style={{ color: 'var(--muted)', fontSize: 11 }}>← registerRoot entry point</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 Root.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← registers Composition with fps, size, duration</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 Composition.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← the actual animation logic</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 template.config.json <span style={{ color: 'var(--muted)', fontSize: 11 }}>← fields and styles config</span></div>
+                  <div style={{ paddingLeft: 24 }}>🖼 preview.png <span style={{ color: 'var(--muted)', fontSize: 11 }}>← optional preview image</span></div>
                 </div>
-                <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                  If you do not include a template.config.json file, Acces Studio will try to detect the fields automatically from your composition code.
-                </p>
+                <div
+                  className="rounded-xl p-4"
+                  style={{ background: '#7C3AED11', border: '1px solid #7C3AED33' }}
+                >
+                  <p className="text-xs font-semibold mb-2" style={{ color: 'var(--primary)' }}>Important</p>
+                  <p className="text-xs" style={{ color: 'var(--muted)' }}>
+                    Do NOT include node_modules, package.json or any dependencies. Acces Studio provides React, Remotion and all installed packages automatically. Your template only needs the 4 core files.
+                  </p>
+                </div>
               </div>
             )}
 
             {activeSection === 'config' && (
               <div className="flex flex-col gap-4">
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>The template.config.json file defines everything about your template:</p>
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>The template.config.json defines your template name, composition ID and all input fields:</p>
                 <div
                   className="rounded-xl p-4 font-mono text-xs overflow-x-auto"
                   style={{ background: 'var(--panel)', border: '1px solid var(--border)', color: 'var(--text)', lineHeight: 1.8 }}
@@ -238,21 +295,23 @@ export default function TemplateGuide({ onClose }) {
 
             {activeSection === 'fields' && (
               <div className="flex flex-col gap-3">
-                <p className="text-sm" style={{ color: 'var(--muted)' }}>These are all the field types you can use in your config:</p>
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>All available field types for your config:</p>
                 {[
                   { type: 'text', desc: 'Single line text input', example: 'Title, Name, Tagline' },
-                  { type: 'textarea', desc: 'Multi line text input', example: 'Description, Bio, Steps' },
+                  { type: 'textarea', desc: 'Multi line text input', example: 'Description, Bio, Summary' },
                   { type: 'color', desc: 'Color picker with hex input', example: 'Primary Color, Background' },
                   { type: 'date', desc: 'Date picker', example: 'Launch Date, Event Date' },
-                  { type: 'number', desc: 'Number input', example: 'Count, Year, Score' },
-                  { type: 'image', desc: 'Image file upload', example: 'Logo, Photo, Background Image' },
+                  { type: 'number', desc: 'Number input with min/max', example: 'Count, Year, Score' },
+                  { type: 'image', desc: 'Image file upload', example: 'Logo, Photo, Banner' },
                   { type: 'video', desc: 'Video file upload', example: 'Background Video, Footage' },
                   { type: 'audio', desc: 'Audio file upload', example: 'Background Music, Voiceover' },
                   { type: 'toggle', desc: 'On/off switch', example: 'Show Subtitle, Enable Animation' },
-                  { type: 'slider', desc: 'Number range slider', example: 'Opacity, Speed, Size' },
-                  { type: 'list', desc: 'Multi item list', example: 'Features, Team Members, Steps' },
+                  { type: 'slider', desc: 'Range slider with min/max/step', example: 'Opacity, Speed, Size' },
+                  { type: 'list', desc: 'Multi item list', example: 'Features, Steps, Team Members' },
                   { type: 'font', desc: 'Font family picker', example: 'Title Font, Body Font' },
-                  { type: 'select', desc: 'Dropdown with options', example: 'Platform, Category, Style' },
+                  { type: 'select', desc: 'Dropdown with custom options', example: 'Platform, Category, Style' },
+                  { type: 'transition', desc: 'Scene transition picker', example: 'Intro Transition, Scene Change' },
+                  { type: 'caption', desc: 'Subtitle with size, color, position', example: 'Subtitles, Captions' },
                 ].map((field, i) => (
                   <div
                     key={i}
@@ -274,10 +333,41 @@ export default function TemplateGuide({ onClose }) {
               </div>
             )}
 
+            {activeSection === 'converting' && (
+              <div className="flex flex-col gap-4">
+                <p className="text-sm" style={{ color: 'var(--text)' }}>
+                  Found a Remotion template online? You can convert it to Acces Studio format using AI in 3 steps.
+                </p>
+                {[
+                  { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder or copy the composition file.' },
+                  { step: '2', title: 'Copy the AI prompt', desc: 'Go to the AI Prompt tab and copy the full prompt. Then paste it into Claude, ChatGPT or any AI.' },
+                  { step: '3', title: 'Paste and describe', desc: 'After the prompt, paste the original template code and tell the AI what changes you want. It will generate a complete Acces Studio compatible template.' },
+                  { step: '4', title: 'Import into Acces Studio', desc: 'Save the generated files into a folder and import it using the Import Template button. Fields appear automatically.' },
+                ].map((item, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-4 p-4 rounded-xl"
+                    style={{ background: 'var(--panel)', border: '1px solid var(--border)' }}
+                  >
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white"
+                      style={{ background: 'var(--primary)' }}
+                    >
+                      {item.step}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text)' }}>{item.title}</p>
+                      <p className="text-xs" style={{ color: 'var(--muted)' }}>{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {activeSection === 'prompt' && (
               <div className="flex flex-col gap-4">
                 <p className="text-sm" style={{ color: 'var(--muted)' }}>
-                  Copy this prompt and paste it into Claude, ChatGPT or any AI. Tell it what type of template you want and it will generate the full template for you — ready to import into Acces Studio.
+                  Copy this prompt and paste it into any AI. Use it to build a new template from scratch or convert an existing Remotion template to Acces Studio format.
                 </p>
                 <div
                   className="rounded-xl p-4 text-xs font-mono leading-relaxed"
@@ -290,7 +380,7 @@ export default function TemplateGuide({ onClose }) {
                     overflowY: 'auto',
                   }}
                 >
-                  {prompt}
+                  {aiPrompt}
                 </div>
                 <button
                   onClick={handleCopy}

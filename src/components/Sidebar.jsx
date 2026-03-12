@@ -1,6 +1,12 @@
 import { useState } from 'react'
 
-const FONTS = ['Inter', 'Roboto', 'Poppins', 'Montserrat', 'Playfair Display', 'Oswald', 'Raleway', 'Lato', 'Open Sans', 'Source Sans Pro']
+const FONTS = [
+  'Inter', 'Roboto', 'Poppins', 'Montserrat', 'Playfair Display',
+  'Oswald', 'Raleway', 'Lato', 'Open Sans', 'Source Sans Pro',
+  'Ubuntu', 'Nunito', 'Merriweather', 'PT Sans', 'Fira Sans'
+]
+
+const TRANSITION_TYPES = ['fade', 'slide', 'wipe', 'flip', 'zoom', 'none']
 
 function FieldRenderer({ field, value, onChange }) {
   const [listInput, setListInput] = useState('')
@@ -108,28 +114,18 @@ function FieldRenderer({ field, value, onChange }) {
         <button
           onClick={() => onChange(!value)}
           style={{
-            width: 40,
-            height: 22,
-            borderRadius: 50,
+            width: 40, height: 22, borderRadius: 50,
             background: value ? 'var(--primary)' : 'var(--border)',
-            position: 'relative',
-            border: 'none',
-            cursor: 'pointer',
+            position: 'relative', border: 'none', cursor: 'pointer',
             transition: 'background 0.2s ease',
           }}
         >
-          <div
-            style={{
-              position: 'absolute',
-              top: 3,
-              left: value ? 21 : 3,
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              background: '#FFFFFF',
-              transition: 'left 0.2s ease',
-            }}
-          />
+          <div style={{
+            position: 'absolute', top: 3,
+            left: value ? 21 : 3,
+            width: 16, height: 16, borderRadius: '50%',
+            background: '#FFFFFF', transition: 'left 0.2s ease',
+          }} />
         </button>
       )
 
@@ -156,7 +152,10 @@ function FieldRenderer({ field, value, onChange }) {
         <div className="flex flex-col gap-2">
           {(Array.isArray(value) ? value : []).map((item, i) => (
             <div key={i} className="flex items-center gap-2">
-              <span className="flex-1 text-xs px-3 py-1.5 rounded-lg" style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}>
+              <span
+                className="flex-1 text-xs px-3 py-1.5 rounded-lg"
+                style={{ background: 'var(--surface)', border: '1px solid var(--border)', color: 'var(--text)' }}
+              >
                 {item}
               </span>
               <button
@@ -204,15 +203,92 @@ function FieldRenderer({ field, value, onChange }) {
         </select>
       )
 
+    case 'transition':
+      return (
+        <div className="flex flex-wrap gap-1.5">
+          {TRANSITION_TYPES.map(t => (
+            <button
+              key={t}
+              onClick={() => onChange(t)}
+              className="text-xs px-3 py-1 rounded-full capitalize transition-all"
+              style={{
+                background: value === t ? 'var(--primary)' : 'var(--surface)',
+                color: value === t ? '#fff' : 'var(--muted)',
+                border: `1px solid ${value === t ? 'var(--primary)' : 'var(--border)'}`,
+              }}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )
+
+    case 'caption':
+      return (
+        <div className="flex flex-col gap-2">
+          <textarea
+            value={value?.text || ''}
+            onChange={e => onChange({ ...value, text: e.target.value })}
+            placeholder="Enter subtitle text..."
+            className="input text-sm resize-none"
+            rows={2}
+          />
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>Size</p>
+              <input
+                type="number"
+                value={value?.fontSize || 24}
+                onChange={e => onChange({ ...value, fontSize: Number(e.target.value) })}
+                className="input text-xs"
+                min={10}
+                max={80}
+              />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>Color</p>
+              <div className="flex items-center gap-1">
+                <div
+                  className="w-8 h-8 rounded border overflow-hidden cursor-pointer shrink-0"
+                  style={{ background: value?.color || '#FFFFFF', borderColor: 'var(--border)' }}
+                >
+                  <input
+                    type="color"
+                    value={value?.color || '#FFFFFF'}
+                    onChange={e => onChange({ ...value, color: e.target.value })}
+                    className="opacity-0 w-full h-full cursor-pointer"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex-1">
+              <p className="text-xs mb-1" style={{ color: 'var(--muted)' }}>Position</p>
+              <select
+                value={value?.position || 'bottom'}
+                onChange={e => onChange({ ...value, position: e.target.value })}
+                className="input text-xs"
+              >
+                <option value="top" style={{ background: 'var(--panel)' }}>Top</option>
+                <option value="center" style={{ background: 'var(--panel)' }}>Center</option>
+                <option value="bottom" style={{ background: 'var(--panel)' }}>Bottom</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )
+
     case 'image':
       return (
         <button
           className="w-full h-14 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs transition-all duration-150"
-          style={{ borderColor: value ? 'var(--primary)' : 'var(--border)', color: value ? 'var(--primary)' : 'var(--muted)' }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)' }}
-          onMouseLeave={e => { if (!value) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted)' } }}
+          style={{
+            borderColor: value ? 'var(--primary)' : 'var(--border)',
+            color: value ? 'var(--primary)' : 'var(--muted)',
+          }}
           onClick={async () => {
-            const files = await window.electron.openFile([{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'svg', 'webp'] }])
+            const files = await window.electron.openFile([
+              { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'svg', 'webp'] }
+            ])
             if (files && files[0]) onChange(files[0])
           }}
         >
@@ -224,9 +300,14 @@ function FieldRenderer({ field, value, onChange }) {
       return (
         <button
           className="w-full h-14 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs transition-all duration-150"
-          style={{ borderColor: value ? 'var(--primary)' : 'var(--border)', color: value ? 'var(--primary)' : 'var(--muted)' }}
+          style={{
+            borderColor: value ? 'var(--primary)' : 'var(--border)',
+            color: value ? 'var(--primary)' : 'var(--muted)',
+          }}
           onClick={async () => {
-            const files = await window.electron.openFile([{ name: 'Videos', extensions: ['mp4', 'mov', 'avi', 'webm'] }])
+            const files = await window.electron.openFile([
+              { name: 'Videos', extensions: ['mp4', 'mov', 'avi', 'webm'] }
+            ])
             if (files && files[0]) onChange(files[0])
           }}
         >
@@ -238,9 +319,14 @@ function FieldRenderer({ field, value, onChange }) {
       return (
         <button
           className="w-full h-14 rounded-xl border-2 border-dashed flex items-center justify-center gap-2 text-xs transition-all duration-150"
-          style={{ borderColor: value ? 'var(--primary)' : 'var(--border)', color: value ? 'var(--primary)' : 'var(--muted)' }}
+          style={{
+            borderColor: value ? 'var(--primary)' : 'var(--border)',
+            color: value ? 'var(--primary)' : 'var(--muted)',
+          }}
           onClick={async () => {
-            const files = await window.electron.openFile([{ name: 'Audio', extensions: ['mp3', 'wav', 'aac', 'ogg'] }])
+            const files = await window.electron.openFile([
+              { name: 'Audio', extensions: ['mp3', 'wav', 'aac', 'ogg'] }
+            ])
             if (files && files[0]) onChange(files[0])
           }}
         >
@@ -261,7 +347,10 @@ function FieldRenderer({ field, value, onChange }) {
   }
 }
 
-export default function Sidebar({ template, fields, inputs, onInputChange, styles, selectedStyles, onStyleChange }) {
+export default function Sidebar({
+  template, fields, inputs, onInputChange,
+  styles, selectedStyles, onStyleChange, onEditFields
+}) {
   return (
     <div
       className="w-72 h-full flex flex-col shrink-0 overflow-hidden"
@@ -276,9 +365,23 @@ export default function Sidebar({ template, fields, inputs, onInputChange, style
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text)' }}>
             Video Details
           </h2>
-          <div className="flex items-center gap-1.5">
-            <div className="live-dot" />
-            <span className="text-xs" style={{ color: '#22C55E' }}>Live</span>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
+              <div className="live-dot" />
+              <span className="text-xs" style={{ color: '#22C55E' }}>Live</span>
+            </div>
+            <button
+              onClick={onEditFields}
+              className="text-xs px-2 py-1 rounded-lg transition-all"
+              style={{
+                background: 'var(--panel)',
+                border: '1px solid var(--border)',
+                color: 'var(--muted)',
+                fontSize: 10,
+              }}
+            >
+              ⚙ Fields
+            </button>
           </div>
         </div>
         <p className="text-xs" style={{ color: 'var(--muted)' }}>
@@ -371,7 +474,7 @@ export default function Sidebar({ template, fields, inputs, onInputChange, style
         </div>
       </div>
 
-      {/* Bottom brand kit notice */}
+      {/* Bottom */}
       <div
         className="px-5 py-3 shrink-0"
         style={{ borderTop: '1px solid var(--border)' }}

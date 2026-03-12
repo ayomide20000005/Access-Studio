@@ -1,0 +1,59 @@
+{
+  "id": "demo-video",
+  "name": "Demo Video",
+  "description": "Showcase your product or service with stunning animations",
+  "version": "1.0.0",
+  "author": "Acces Studio",
+  "composition": "DemoVideo",
+  "preview": "preview.png",
+  "fields": [
+    {
+      "key": "productName",
+      "label": "Product Name",
+      "type": "text",
+      "placeholder": "e.g. Acces Studio",
+      "required": true
+    },
+    {
+      "key": "tagline",
+      "label": "Tagline",
+      "type": "text",
+      "placeholder": "e.g. Create videos in minutes"
+    },
+    {
+      "key": "keyFeatures",
+      "label": "Key Features",
+      "type": "textarea",
+      "placeholder": "e.g. No code, Offline, Fast"
+    },
+    {
+      "key": "callToAction",
+      "label": "Call to Action",
+      "type": "text",
+      "placeholder": "e.g. Try it today"
+    },
+    {
+      "key": "primaryColor",
+      "label": "Primary Color",
+      "type": "color",
+      "default": "#7C3AED"
+    },
+    {
+      "key": "secondaryColor",
+      "label": "Secondary Color",
+      "type": "color",
+      "default": "#4F46E5"
+    },
+    {
+      "key": "fontFamily",
+      "label": "Font",
+      "type": "font"
+    }
+  ],
+  "styles": {
+    "videoStyle": ["Minimal", "Bold", "Corporate", "Playful"],
+    "mood": ["Energetic", "Professional", "Calm", "Exciting"],
+    "animation": ["Smooth", "Snappy", "Cinematic"],
+    "background": ["Gradient", "Dark", "Light"]
+  }
+}

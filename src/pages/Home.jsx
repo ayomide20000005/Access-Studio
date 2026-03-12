@@ -12,6 +12,7 @@ const templates = [
     icon: '🎬',
     color: '#7C3AED',
     fields: ['Product Name', 'Tagline', 'Key Features', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'product-launch',
@@ -20,6 +21,7 @@ const templates = [
     icon: '🚀',
     color: '#4F46E5',
     fields: ['Product Name', 'Launch Date', 'Key Benefits', 'Price', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'explainer-video',
@@ -28,6 +30,7 @@ const templates = [
     icon: '💡',
     color: '#0891B2',
     fields: ['Topic', 'Problem', 'Solution', 'How It Works', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'promotional-video',
@@ -36,6 +39,7 @@ const templates = [
     icon: '📣',
     color: '#DC2626',
     fields: ['Brand Name', 'Offer', 'Discount', 'Expiry Date', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'tutorial-video',
@@ -44,6 +48,7 @@ const templates = [
     icon: '📚',
     color: '#059669',
     fields: ['Tutorial Title', 'Steps', 'Tips', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'intro-outro',
@@ -52,6 +57,7 @@ const templates = [
     icon: '🎞️',
     color: '#D97706',
     fields: ['Channel Name', 'Tagline', 'Social Links'],
+    previewPath: null,
   },
   {
     id: 'social-media-clip',
@@ -60,6 +66,7 @@ const templates = [
     icon: '📱',
     color: '#DB2777',
     fields: ['Caption', 'Hashtags', 'Platform', 'Call to Action'],
+    previewPath: null,
   },
   {
     id: 'pitch-deck-video',
@@ -68,6 +75,7 @@ const templates = [
     icon: '💼',
     color: '#7C3AED',
     fields: ['Company Name', 'Problem', 'Solution', 'Market Size', 'Team', 'Ask'],
+    previewPath: null,
   },
   {
     id: 'resume-portfolio',
@@ -76,6 +84,7 @@ const templates = [
     icon: '👤',
     color: '#4F46E5',
     fields: ['Full Name', 'Role', 'Skills', 'Experience', 'Contact'],
+    previewPath: null,
   },
   {
     id: 'event-announcement',
@@ -84,6 +93,7 @@ const templates = [
     icon: '📅',
     color: '#0891B2',
     fields: ['Event Name', 'Date', 'Location', 'Description', 'Register Link'],
+    previewPath: null,
   },
 ]
 
@@ -182,7 +192,7 @@ export default function Home({ onTemplateSelect, theme }) {
           </button>
         </div>
 
-        {/* Right — empty to balance layout */}
+        {/* Right */}
         <div style={{ width: 120 }} />
       </div>
 
@@ -224,10 +234,7 @@ export default function Home({ onTemplateSelect, theme }) {
         {activeTab === 'templates' && (
           <>
             {filtered.length === 0 ? (
-              <div
-                className="flex flex-col items-center justify-center h-full"
-                style={{ color: 'var(--muted)' }}
-              >
+              <div className="flex flex-col items-center justify-center h-full" style={{ color: 'var(--muted)' }}>
                 <span className="text-4xl mb-4">🔍</span>
                 <p className="text-sm">No templates found for "{search}"</p>
               </div>
@@ -311,7 +318,7 @@ export default function Home({ onTemplateSelect, theme }) {
           </div>
         )}
 
-        <span className="text-xs" style={{ color: 'var(--muted)' }}>⚡ Offline Ready</span>
+        <span className="text-xs" style={{ color: 'var(--muted)' }}> Offline Ready</span>
       </div>
 
       {/* Template Guide Modal */}

@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from '../components/Sidebar'
 import Canvas from '../components/Canvas'
+import FieldEditor from '../components/FieldEditor'
 
 const templateFields = {
   'demo-video': [
@@ -10,43 +11,54 @@ const templateFields = {
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Try it today' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
     { key: 'secondaryColor', label: 'Secondary Color', type: 'color' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'product-launch': [
     { key: 'productName', label: 'Product Name', type: 'text', placeholder: 'e.g. iPhone 16' },
-    { key: 'launchDate', label: 'Launch Date', type: 'text', placeholder: 'e.g. January 1, 2025' },
+    { key: 'launchDate', label: 'Launch Date', type: 'date' },
     { key: 'keyBenefits', label: 'Key Benefits', type: 'textarea', placeholder: 'e.g. Faster, Smarter, Better' },
     { key: 'price', label: 'Price', type: 'text', placeholder: 'e.g. $99' },
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Pre-order Now' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'logoPath', label: 'Product Image', type: 'image' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'explainer-video': [
     { key: 'topic', label: 'Topic', type: 'text', placeholder: 'e.g. How AI works' },
     { key: 'problem', label: 'Problem', type: 'textarea', placeholder: 'e.g. People struggle to understand AI' },
     { key: 'solution', label: 'Solution', type: 'textarea', placeholder: 'e.g. We break it down simply' },
-    { key: 'howItWorks', label: 'How It Works', type: 'textarea', placeholder: 'e.g. Step 1, Step 2, Step 3' },
+    { key: 'howItWorks', label: 'How It Works', type: 'list', placeholder: 'Add a step' },
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Learn More' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'promotional-video': [
     { key: 'brandName', label: 'Brand Name', type: 'text', placeholder: 'e.g. Nike' },
     { key: 'offer', label: 'Offer', type: 'text', placeholder: 'e.g. Summer Sale' },
     { key: 'discount', label: 'Discount', type: 'text', placeholder: 'e.g. 50% OFF' },
-    { key: 'expiryDate', label: 'Expiry Date', type: 'text', placeholder: 'e.g. Ends Sunday' },
+    { key: 'expiryDate', label: 'Expiry Date', type: 'date' },
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Shop Now' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'logoPath', label: 'Brand Logo', type: 'image' },
+    { key: 'backgroundMusic', label: 'Background Music', type: 'audio' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'tutorial-video': [
     { key: 'tutorialTitle', label: 'Tutorial Title', type: 'text', placeholder: 'e.g. How to use Figma' },
-    { key: 'steps', label: 'Steps', type: 'textarea', placeholder: 'e.g. Open Figma, Create frame, Add elements' },
+    { key: 'steps', label: 'Steps', type: 'list', placeholder: 'Add a step' },
     { key: 'tips', label: 'Pro Tip', type: 'text', placeholder: 'e.g. Always save your work' },
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Watch Full Tutorial' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'intro-outro': [
     { key: 'channelName', label: 'Channel Name', type: 'text', placeholder: 'e.g. My Channel' },
     { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'e.g. Subscribe for more' },
-    { key: 'socialLinks', label: 'Social Links', type: 'textarea', placeholder: 'e.g. @mychannel' },
+    { key: 'socialLinks', label: 'Social Links', type: 'list', placeholder: 'Add a social link' },
+    { key: 'logoPath', label: 'Channel Logo', type: 'image' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'backgroundMusic', label: 'Background Music', type: 'audio' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'social-media-clip': [
     { key: 'caption', label: 'Caption', type: 'textarea', placeholder: 'e.g. This changed everything...' },
@@ -54,6 +66,9 @@ const templateFields = {
     { key: 'platform', label: 'Platform', type: 'select', options: ['tiktok', 'instagram', 'twitter', 'youtube', 'linkedin'] },
     { key: 'callToAction', label: 'Call to Action', type: 'text', placeholder: 'e.g. Follow for more' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'logoPath', label: 'Profile Image', type: 'image' },
+    { key: 'backgroundMusic', label: 'Background Music', type: 'audio' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'pitch-deck-video': [
     { key: 'companyName', label: 'Company Name', type: 'text', placeholder: 'e.g. Acces Studio' },
@@ -63,22 +78,29 @@ const templateFields = {
     { key: 'team', label: 'Team', type: 'text', placeholder: 'e.g. 3 experienced founders' },
     { key: 'ask', label: 'The Ask', type: 'text', placeholder: 'e.g. Raising $500K' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'logoPath', label: 'Company Logo', type: 'image' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'resume-portfolio': [
     { key: 'fullName', label: 'Full Name', type: 'text', placeholder: 'e.g. John Doe' },
     { key: 'role', label: 'Role', type: 'text', placeholder: 'e.g. Frontend Developer' },
-    { key: 'skills', label: 'Skills', type: 'textarea', placeholder: 'e.g. React, Node.js, Figma' },
+    { key: 'skills', label: 'Skills', type: 'list', placeholder: 'Add a skill' },
     { key: 'experience', label: 'Experience', type: 'text', placeholder: 'e.g. 3+ Years' },
     { key: 'contact', label: 'Contact', type: 'text', placeholder: 'e.g. hello@yourname.com' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'photoPath', label: 'Profile Photo', type: 'image' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
   'event-announcement': [
     { key: 'eventName', label: 'Event Name', type: 'text', placeholder: 'e.g. Tech Summit 2025' },
-    { key: 'date', label: 'Date', type: 'text', placeholder: 'e.g. January 1, 2025' },
+    { key: 'date', label: 'Date', type: 'date' },
     { key: 'location', label: 'Location', type: 'text', placeholder: 'e.g. Lagos, Nigeria' },
     { key: 'description', label: 'Description', type: 'textarea', placeholder: 'e.g. Join us for an amazing event' },
     { key: 'registerLink', label: 'Register Link', type: 'text', placeholder: 'e.g. register.yoursite.com' },
     { key: 'primaryColor', label: 'Primary Color', type: 'color' },
+    { key: 'logoPath', label: 'Event Banner', type: 'image' },
+    { key: 'backgroundMusic', label: 'Background Music', type: 'audio' },
+    { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 }
 
@@ -139,8 +161,11 @@ const templateStyles = {
 const defaultInputs = (fields) => {
   const defaults = { duration: 10 }
   fields.forEach(f => {
-    if (f.type === 'color') defaults[f.key] = '#7C3AED'
-    else defaults[f.key] = ''
+    if (f.type === 'color') defaults[f.key] = f.default || '#7C3AED'
+    else if (f.type === 'toggle') defaults[f.key] = f.default || false
+    else if (f.type === 'slider') defaults[f.key] = f.default || f.min || 0
+    else if (f.type === 'list') defaults[f.key] = f.default || []
+    else defaults[f.key] = f.default || ''
   })
   return defaults
 }
@@ -154,13 +179,24 @@ const defaultStyles = (styles) => {
 }
 
 export default function Editor({ template, projectData, onProjectUpdate, onExport, onHome, theme }) {
-  const fields = templateFields[template?.id] || []
-  const styles = templateStyles[template?.id] || {}
+  // Support both built-in and custom template fields
+  const builtInFields = templateFields[template?.id] || []
+  const builtInStyles = templateStyles[template?.id] || {}
+
+  // Custom templates carry their own fields and styles
+  const [fields, setFields] = useState(
+    template?.isCustom ? (template.fields || []) : builtInFields
+  )
+  const [styles] = useState(
+    template?.isCustom ? (template.styles || {}) : builtInStyles
+  )
+
   const [inputs, setInputs] = useState(defaultInputs(fields))
   const [selectedStyles, setSelectedStyles] = useState(defaultStyles(styles))
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [showTimeline, setShowTimeline] = useState(false)
+  const [showFieldEditor, setShowFieldEditor] = useState(false)
 
   useEffect(() => {
     try {
@@ -176,7 +212,6 @@ export default function Editor({ template, projectData, onProjectUpdate, onExpor
     } catch {}
   }, [])
 
-  // Push inputs and selectedStyles up to App every time they change
   useEffect(() => {
     if (onProjectUpdate) {
       onProjectUpdate(inputs, selectedStyles)
@@ -189,6 +224,18 @@ export default function Editor({ template, projectData, onProjectUpdate, onExpor
 
   const handleStyleChange = (key, value) => {
     setSelectedStyles(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleFieldsSave = async (updatedFields) => {
+    setFields(updatedFields)
+    setShowFieldEditor(false)
+
+    // If custom template save fields back to config
+    if (template?.isCustom && template?.id) {
+      try {
+        await window.electron.updateTemplate(template.id, { fields: updatedFields })
+      } catch {}
+    }
   }
 
   return (
@@ -217,6 +264,17 @@ export default function Editor({ template, projectData, onProjectUpdate, onExpor
 
         {/* Center */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowFieldEditor(true)}
+            className="text-xs px-3 py-1.5 rounded-lg transition-all"
+            style={{
+              background: 'var(--panel)',
+              border: '1px solid var(--border)',
+              color: 'var(--muted)',
+            }}
+          >
+            ⚙ Edit Fields
+          </button>
           <button
             onClick={() => setShowTimeline(!showTimeline)}
             className="text-xs px-3 py-1.5 rounded-lg transition-all"
@@ -276,6 +334,7 @@ export default function Editor({ template, projectData, onProjectUpdate, onExpor
           styles={styles}
           selectedStyles={selectedStyles}
           onStyleChange={handleStyleChange}
+          onEditFields={() => setShowFieldEditor(true)}
         />
         <Canvas
           template={template}
@@ -288,6 +347,16 @@ export default function Editor({ template, projectData, onProjectUpdate, onExpor
           showTimeline={showTimeline}
         />
       </div>
+
+      {/* Field Editor Modal */}
+      {showFieldEditor && (
+        <FieldEditor
+          fields={fields}
+          templateName={template?.name}
+          onSave={handleFieldsSave}
+          onClose={() => setShowFieldEditor(false)}
+        />
+      )}
     </div>
   )
 }

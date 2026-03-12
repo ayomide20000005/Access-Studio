@@ -1,4 +1,6 @@
 export default function TemplateCard({ template, isHovered, onHover, onSelect }) {
+  const hasPreview = template.preview || template.previewPath
+
   return (
     <div
       className="relative rounded-2xl cursor-pointer transition-all duration-200 overflow-hidden"
@@ -19,30 +21,59 @@ export default function TemplateCard({ template, isHovered, onHover, onSelect })
           background: `linear-gradient(135deg, ${template.color}22 0%, var(--panel) 100%)`,
         }}
       >
-        {/* Animated background on hover */}
-        <div
-          className="absolute inset-0 transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(ellipse at center, ${template.color}33 0%, transparent 70%)`,
-            opacity: isHovered ? 1 : 0,
-          }}
-        />
-
-        {/* Icon */}
-        <span
-          className="text-5xl relative z-10 transition-transform duration-200"
-          style={{ transform: isHovered ? 'scale(1.15)' : 'scale(1)' }}
-        >
-          {template.icon}
-        </span>
+        {/* Preview image if available */}
+        {hasPreview ? (
+          <img
+            src={template.previewPath || template.preview}
+            alt={template.name}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              position: 'absolute',
+              inset: 0,
+              opacity: isHovered ? 0.85 : 1,
+              transition: 'opacity 0.2s ease',
+            }}
+            onError={e => { e.currentTarget.style.display = 'none' }}
+          />
+        ) : (
+          <>
+            {/* Animated background on hover */}
+            <div
+              className="absolute inset-0 transition-opacity duration-300"
+              style={{
+                background: `radial-gradient(ellipse at center, ${template.color}33 0%, transparent 70%)`,
+                opacity: isHovered ? 1 : 0,
+              }}
+            />
+            {/* Icon */}
+            <span
+              className="text-5xl relative z-10 transition-transform duration-200"
+              style={{ transform: isHovered ? 'scale(1.15)' : 'scale(1)' }}
+            >
+              {template.icon}
+            </span>
+          </>
+        )}
 
         {/* Play badge on hover */}
         {isHovered && (
           <div
-            className="absolute bottom-3 right-3 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1"
+            className="absolute bottom-3 right-3 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1 z-10"
             style={{ background: template.color, color: '#fff' }}
           >
             ▶ Use
+          </div>
+        )}
+
+        {/* Custom template badge */}
+        {template.isCustom && (
+          <div
+            className="absolute top-3 left-3 text-xs px-2 py-0.5 rounded-full z-10"
+            style={{ background: '#7C3AED', color: '#fff' }}
+          >
+            Custom
           </div>
         )}
       </div>
@@ -66,19 +97,19 @@ export default function TemplateCard({ template, isHovered, onHover, onSelect })
 
         {/* Field tags */}
         <div className="flex flex-wrap gap-1">
-          {template.fields.slice(0, 3).map(field => (
+          {(template.fields || []).slice(0, 3).map((field, i) => (
             <span
-              key={field}
+              key={i}
               className="text-xs px-2 py-0.5 rounded-full"
               style={{
                 background: `${template.color}18`,
                 color: template.color,
               }}
             >
-              {field}
+              {typeof field === 'string' ? field : field.label}
             </span>
           ))}
-          {template.fields.length > 3 && (
+          {(template.fields || []).length > 3 && (
             <span
               className="text-xs px-2 py-0.5 rounded-full"
               style={{ background: 'var(--panel)', color: 'var(--muted)' }}
