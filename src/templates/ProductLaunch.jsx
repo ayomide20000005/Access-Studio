@@ -1,502 +1,494 @@
+// LOCATION: src/templates/ProductLaunch.jsx
+
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion'
 
 export const ProductLaunch = ({
-  productName = 'Acces Studio',
-  tagline = 'Create stunning videos in minutes',
-  launchDate = 'Available Now',
-  chatMessages = 'Make me a product launch video, Here is your cinematic product launch video!, Now add a promo section, Done — with animation and transitions',
-  features = 'AI-Powered Templates, No Timeline Needed, Export in 4K',
-  callToAction = 'Try It Free',
-  price = 'Free & Open Source',
-  primaryColor = '#7C3AED',
-  secondaryColor = '#4F46E5',
-  accentColor = '#06B6D4',
-  logoPath = null,
+  productName = 'Product Name',
+  tagline = 'The future is here',
+  launchDate = 'Coming Soon',
+  keyBenefits = 'Faster performance, Beautiful design, Built to last',
+  features = 'Feature One, Feature Two, Feature Three, Feature Four',
+  price = '$99',
+  callToAction = 'Pre-order Now',
+  primaryColor = '#14B8A6',
+  secondaryColor = '#6366F1',
+  accentColor = '#F59E0B',
   fontFamily = 'Inter',
-  pace = 'Medium',
   launchFeel = 'Hype',
-  colorVibe = 'Dark Luxury',
+  pace = 'Medium',
 }) => {
   const frame = useCurrentFrame()
   const { fps, durationInFrames } = useVideoConfig()
 
-  const damping = pace === 'Fast' ? 20 : pace === 'Slow' ? 8 : 12
+  const damping = pace === 'Fast' ? 22 : pace === 'Slow' ? 8 : 13
 
-  const messagesArray = typeof chatMessages === 'string'
-    ? chatMessages.split(',').map(m => m.trim()).filter(Boolean)
-    : chatMessages
+  const benefitsArray = typeof keyBenefits === 'string'
+    ? keyBenefits.split(',').map(b => b.trim()).filter(Boolean)
+    : Array.isArray(keyBenefits) ? keyBenefits : []
 
   const featuresArray = typeof features === 'string'
     ? features.split(',').map(f => f.trim()).filter(Boolean)
-    : features
+    : Array.isArray(features) ? features : []
 
+  // ── Proportional scene timing ──
+  const S1 = Math.floor(durationInFrames * 0.22)
+  const S2 = Math.floor(durationInFrames * 0.55)
+  const S3 = Math.floor(durationInFrames * 0.78)
+
+  const scene = frame < S1 ? 0 : frame < S2 ? 1 : frame < S3 ? 2 : 3
+
+  // ── Helpers ──
   const fadeIn = (start, end) =>
     interpolate(frame, [start, end], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
-  const slideUp = (start, distance = 40) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: distance, to: 0, config: { damping, stiffness: 100 } })
+  const slideUp = (start, dist = 50) =>
+    spring({ frame: Math.max(0, frame - start), fps, from: dist, to: 0, config: { damping } })
 
-  const slideRight = (start) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: -60, to: 0, config: { damping } })
+  const scaleSpring = (start, from = 0.7) =>
+    spring({ frame: Math.max(0, frame - start), fps, from, to: 1, config: { damping } })
 
-  const slideLeft = (start) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: 60, to: 0, config: { damping } })
+  const outroOpacity = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
 
-  const scaleIn = (start) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: 0.85, to: 1, config: { damping } })
+  const flashOpacity = (t) =>
+    interpolate(frame, [t - 3, t, t + 8], [0, 0.92, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
-  const outroOpacity = interpolate(frame, [durationInFrames - 20, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
+  const getFeel = () => {
+    if (launchFeel === 'Premium') return { titleSize: 100, spacing: '-4px' }
+    if (launchFeel === 'Dramatic') return { titleSize: 110, spacing: '-5px' }
+    if (launchFeel === 'Clean') return { titleSize: 80, spacing: '-2px' }
+    return { titleSize: 96, spacing: '-3px' }
+  }
+  const { titleSize, spacing } = getFeel()
 
-  // Scene timing — proportional to total duration
-  const SCENE1_END = Math.floor(durationInFrames * 0.20)  // 20% — Brand intro
-  const SCENE2_END = Math.floor(durationInFrames * 0.50)  // 50% — Chat demo
-  const SCENE3_END = Math.floor(durationInFrames * 0.75)  // 75% — Features
-  const SCENE4_END = durationInFrames                     // 100% — CTA
-
-  const currentScene =
-    frame < SCENE1_END ? 0 :
-    frame < SCENE2_END ? 1 :
-    frame < SCENE3_END ? 2 : 3
-
-  const sceneFrame = (sceneStart) => frame - sceneStart
-
-  // Typing cursor blink
-  const cursorBlink = Math.floor(frame / 15) % 2 === 0
-
-  // Glowing particle positions
-  const particles = [
-    { x: 15, y: 20, size: 2, speed: 0.8 },
-    { x: 85, y: 15, size: 1.5, speed: 1.2 },
-    { x: 25, y: 75, size: 2.5, speed: 0.6 },
-    { x: 70, y: 80, size: 1, speed: 1.5 },
-    { x: 50, y: 10, size: 2, speed: 0.9 },
-    { x: 90, y: 60, size: 1.5, speed: 1.1 },
-    { x: 10, y: 50, size: 1, speed: 0.7 },
-    { x: 60, y: 90, size: 2, speed: 1.3 },
-  ]
-
-  const getBackground = () => {
-    if (colorVibe === 'Bright Pop') return `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`
-    if (colorVibe === 'Monochrome') return '#050505'
-    return '#060608'
+  // ── Neon glow text trail ──
+  const NeonTextReveal = ({ text, startFrame, fontSize, color }) => {
+    const letters = text.split('')
+    const delay = launchFeel === 'Dramatic' ? 5 : 3
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+        {letters.map((char, i) => {
+          const lf = startFrame + i * delay
+          const op = interpolate(frame, [lf, lf + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+          const blur = interpolate(frame, [lf, lf + 20], [20, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+          const glow = interpolate(frame, [lf, lf + 10, lf + 35], [3, 1.5, 0.3], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+          return (
+            <span key={i} style={{
+              fontSize,
+              fontWeight: 900,
+              color: '#FFFFFF',
+              opacity: op,
+              filter: `blur(${blur}px) drop-shadow(0 0 ${glow * 18}px ${color}) drop-shadow(0 0 ${glow * 6}px ${color})`,
+              letterSpacing: spacing,
+              lineHeight: 1,
+              display: 'inline-block',
+            }}>
+              {char === ' ' ? '\u00A0' : char}
+            </span>
+          )
+        })}
+      </div>
+    )
   }
 
+  // ── Particle burst ──
+  const ParticleBurst = ({ startFrame, count = 28 }) => (
+    <>
+      {Array.from({ length: count }).map((_, i) => {
+        const angle = (i / count) * Math.PI * 2
+        const dist = 100 + (i % 4) * 50
+        const pf = Math.max(0, frame - startFrame)
+        const progress = interpolate(pf, [0, 45], [0, 1], { extrapolateRight: 'clamp' })
+        const x = Math.cos(angle) * dist * progress
+        const y = Math.sin(angle) * dist * progress
+        const op = interpolate(pf, [0, 8, 45], [0, 1, 0], { extrapolateRight: 'clamp' })
+        const size = interpolate(pf, [0, 45], [7, 2], { extrapolateRight: 'clamp' })
+        const colors = [primaryColor, secondaryColor, accentColor, '#FFFFFF']
+        return (
+          <div key={i} style={{
+            position: 'absolute',
+            left: '50%', top: '55%',
+            width: size, height: size,
+            borderRadius: '50%',
+            background: colors[i % colors.length],
+            opacity: op,
+            transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
+            boxShadow: `0 0 ${size * 3}px ${colors[i % colors.length]}`,
+            pointerEvents: 'none',
+          }} />
+        )
+      })}
+    </>
+  )
+
+  // ── Ken Burns zoom ──
+  const kenScale = interpolate(frame, [0, durationInFrames], [1, 1.1], { extrapolateRight: 'clamp' })
+  const kenX = interpolate(frame, [0, durationInFrames], [0, -15], { extrapolateRight: 'clamp' })
+
+  // ── Bloom pulse ──
+  const bloom = interpolate(frame % 60, [0, 30, 60], [0.95, 1.05, 0.95])
+
+  // ── Feature carousel timing ──
+  const featureSlotDuration = Math.max(1, Math.floor((S2 - S1) / Math.max(featuresArray.length, 1)))
+  const currentFeatureIndex = Math.min(
+    Math.floor(Math.max(0, frame - S1) / featureSlotDuration),
+    Math.max(0, featuresArray.length - 1)
+  )
+  const featureSlotFrame = Math.max(0, frame - S1) % featureSlotDuration
+
   return (
-    <AbsoluteFill style={{ background: getBackground(), fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#06060F', fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
 
-      {/* Ambient background glow */}
+      {/* Deep background radial glow — Ken Burns applied here */}
       <AbsoluteFill style={{
-        background: `radial-gradient(ellipse at 20% 50%, ${primaryColor}18 0%, transparent 55%),
-                     radial-gradient(ellipse at 80% 30%, ${secondaryColor}12 0%, transparent 50%),
-                     radial-gradient(ellipse at 60% 80%, ${accentColor}10 0%, transparent 45%)`,
+        background: `
+          radial-gradient(ellipse at 20% 50%, ${primaryColor}18 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 50%, ${secondaryColor}14 0%, transparent 50%),
+          radial-gradient(ellipse at 50% 100%, ${accentColor}0C 0%, transparent 40%)
+        `,
+        transform: `scale(${kenScale}) translateX(${kenX}px)`,
       }} />
 
-      {/* Subtle grid */}
+      {/* Grid overlay */}
       <AbsoluteFill style={{
-        backgroundImage: `linear-gradient(${primaryColor}08 1px, transparent 1px), linear-gradient(90deg, ${primaryColor}08 1px, transparent 1px)`,
-        backgroundSize: '60px 60px',
+        backgroundImage: `linear-gradient(${primaryColor}10 1px, transparent 1px), linear-gradient(90deg, ${primaryColor}10 1px, transparent 1px)`,
+        backgroundSize: '80px 80px',
+        opacity: 0.5,
       }} />
 
-      {/* Floating particles */}
-      {particles.map((p, i) => (
-        <div key={i} style={{
-          position: 'absolute',
-          left: `${p.x}%`,
-          top: `${(p.y + Math.sin((frame * p.speed * 0.05) + i) * 3)}%`,
-          width: p.size * 3,
-          height: p.size * 3,
-          borderRadius: '50%',
-          background: i % 2 === 0 ? primaryColor : accentColor,
-          opacity: interpolate(frame % (120 / p.speed), [0, 60 / p.speed, 120 / p.speed], [0.2, 0.7, 0.2]),
-          boxShadow: `0 0 ${p.size * 4}px ${i % 2 === 0 ? primaryColor : accentColor}`,
-        }} />
-      ))}
+      {/* Scanlines */}
+      <AbsoluteFill style={{
+        backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.35) 2px, rgba(0,0,0,0.35) 4px)',
+        opacity: 0.04,
+        pointerEvents: 'none',
+        zIndex: 99,
+      }} />
 
-      {/* ============ SCENE 1: Brand Intro ============ */}
-      {currentScene === 0 && (
+      {/* Chromatic aberration — fades after entry */}
+      <AbsoluteFill style={{
+        background: `radial-gradient(ellipse at 50% 50%, transparent 60%, ${primaryColor}06 100%)`,
+        transform: `translateX(${interpolate(frame, [0, 20], [4, 0.5], { extrapolateRight: 'clamp' })}px)`,
+        mixBlendMode: 'screen',
+        pointerEvents: 'none',
+        zIndex: 98,
+      }} />
+      <AbsoluteFill style={{
+        background: `radial-gradient(ellipse at 50% 50%, transparent 60%, ${secondaryColor}06 100%)`,
+        transform: `translateX(${interpolate(frame, [0, 20], [-4, -0.5], { extrapolateRight: 'clamp' })}px)`,
+        mixBlendMode: 'screen',
+        pointerEvents: 'none',
+        zIndex: 98,
+      }} />
+
+      {/* ══════════════════════════════════
+          SCENE 1 — Logo + Neon Name Reveal
+      ══════════════════════════════════ */}
+      {scene === 0 && (
         <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
-          {/* Logo or icon */}
+          {/* Bloom ring */}
           <div style={{
-            width: 100,
-            height: 100,
-            borderRadius: 28,
-            background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+            position: 'absolute',
+            width: 700, height: 700,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${primaryColor}12 0%, transparent 65%)`,
+            transform: `scale(${bloom})`,
+            pointerEvents: 'none',
+          }} />
+
+          {/* Introducing label */}
+          <div style={{
+            color: primaryColor,
+            fontSize: 13,
+            fontWeight: 700,
+            letterSpacing: 8,
+            textTransform: 'uppercase',
+            opacity: fadeIn(0, 14),
+            marginBottom: 28,
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 44,
-            opacity: fadeIn(0, 20),
-            transform: `scale(${scaleIn(0)}) translateY(${slideUp(0)}px)`,
-            marginBottom: 40,
-            boxShadow: `0 0 60px ${primaryColor}44`,
+            gap: 16,
+            filter: `drop-shadow(0 0 10px ${primaryColor})`,
           }}>
-            🎬
+            <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, transparent, ${primaryColor})` }} />
+            Introducing
+            <div style={{ width: 40, height: 1, background: `linear-gradient(90deg, ${primaryColor}, transparent)` }} />
           </div>
 
-          {/* Brand name */}
-          <div style={{
-            fontSize: 96,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(10, 30),
-            transform: `translateY(${slideUp(10)}px)`,
-            letterSpacing: '-3px',
-            lineHeight: 1,
-            textAlign: 'center',
-            marginBottom: 20,
-          }}>
-            {productName}
-          </div>
+          {/* Neon glow text trail */}
+          <NeonTextReveal text={productName} startFrame={6} fontSize={titleSize} color={primaryColor} />
 
-          {/* Tagline with animated underline */}
+          {/* Animated underline draw */}
           <div style={{
-            fontSize: 26,
-            fontWeight: 400,
-            color: accentColor,
-            opacity: fadeIn(20, 40),
-            transform: `translateY(${slideUp(20)}px)`,
+            marginTop: 14,
+            height: 3,
+            width: interpolate(frame, [18, 52], [0, 340], { extrapolateRight: 'clamp' }),
+            background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+            borderRadius: 2,
+            boxShadow: `0 0 14px ${primaryColor}88`,
+          }} />
+
+          {/* Tagline */}
+          <div style={{
+            fontSize: 22,
+            fontWeight: 300,
+            color: '#777',
+            opacity: fadeIn(24, 40),
+            marginTop: 22,
+            letterSpacing: 2,
             textAlign: 'center',
-            letterSpacing: 1,
           }}>
             {tagline}
           </div>
 
           {/* Launch date badge */}
           <div style={{
-            marginTop: 48,
-            background: `${primaryColor}22`,
-            border: `1px solid ${primaryColor}55`,
+            marginTop: 32,
+            background: `${primaryColor}18`,
+            border: `1px solid ${primaryColor}44`,
             borderRadius: 50,
-            padding: '10px 28px',
+            padding: '10px 32px',
             color: primaryColor,
             fontSize: 15,
             fontWeight: 600,
-            letterSpacing: 2,
-            textTransform: 'uppercase',
-            opacity: fadeIn(30, 50),
+            opacity: fadeIn(30, 44),
+            filter: `drop-shadow(0 0 8px ${primaryColor}55)`,
           }}>
-            ✦ {launchDate}
+            📅 {launchDate}
           </div>
 
-          {/* Scanning line effect */}
-          <div style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            height: 1,
-            background: `linear-gradient(90deg, transparent, ${accentColor}66, transparent)`,
-            top: `${interpolate(frame, [0, SCENE1_END], [0, 100], { extrapolateRight: 'clamp' })}%`,
-            opacity: 0.6,
-          }} />
         </AbsoluteFill>
       )}
 
-      {/* ============ SCENE 2: Chat Demo ============ */}
-      {currentScene === 1 && (() => {
-        const sf = sceneFrame(SCENE1_END)
-        const msgDelay = 18
-        return (
-          <AbsoluteFill style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '60px 120px' }}>
+      {/* ══════════════════════════════════
+          SCENE 2 — Features Cube Carousel
+      ══════════════════════════════════ */}
+      {scene === 1 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 120px' }}>
 
-            {/* Left label */}
-            <div style={{
-              position: 'absolute',
-              left: 80,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              opacity: fadeIn(SCENE1_END, SCENE1_END + 20),
-            }}>
-              <div style={{ color: accentColor, fontSize: 13, fontWeight: 600, letterSpacing: 3, textTransform: 'uppercase', marginBottom: 12 }}>
-                See it in action
-              </div>
-              <div style={{ color: '#FFFFFF', fontSize: 36, fontWeight: 800, lineHeight: 1.2, letterSpacing: '-1px', maxWidth: 280 }}>
-                Just describe what you need
-              </div>
-            </div>
+          <div style={{
+            color: primaryColor,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: 6,
+            textTransform: 'uppercase',
+            opacity: fadeIn(S1, S1 + 15),
+            marginBottom: 52,
+            filter: `drop-shadow(0 0 8px ${primaryColor})`,
+          }}>
+            Key Features
+          </div>
 
-            {/* Chat window */}
-            <div style={{
-              position: 'absolute',
-              right: 80,
-              width: 560,
-              background: '#0E0E14',
-              border: `1px solid ${primaryColor}33`,
-              borderRadius: 20,
-              overflow: 'hidden',
-              opacity: fadeIn(SCENE1_END + 5, SCENE1_END + 25),
-              transform: `translateX(${slideLeft(SCENE1_END + 5)}px)`,
-              boxShadow: `0 0 80px ${primaryColor}22`,
-            }}>
-
-              {/* Window chrome */}
-              <div style={{
-                background: '#13131A',
-                padding: '14px 20px',
-                borderBottom: `1px solid ${primaryColor}22`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
+          {/* Feature card with cube rotate entry */}
+          {featuresArray.map((feature, i) => {
+            if (i !== currentFeatureIndex) return null
+            const entryOp = interpolate(featureSlotFrame, [0, 14], [0, 1], { extrapolateRight: 'clamp' })
+            const entryRot = interpolate(featureSlotFrame, [0, 18], [-12, 0], { extrapolateRight: 'clamp' })
+            const entryScale = spring({ frame: Math.max(0, featureSlotFrame), fps, from: 0.82, to: 1, config: { damping } })
+            return (
+              <div key={i} style={{
+                opacity: entryOp,
+                transform: `perspective(900px) rotateY(${entryRot}deg) scale(${entryScale})`,
+                textAlign: 'center',
+                position: 'relative',
               }}>
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FF5F57' }} />
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#FEBC2E' }} />
-                <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#28C840' }} />
-                <div style={{ marginLeft: 12, color: '#555', fontSize: 13 }}>{productName} — AI Studio</div>
-              </div>
-
-              {/* Messages */}
-              <div style={{ padding: '24px 20px', display: 'flex', flexDirection: 'column', gap: 16, minHeight: 300 }}>
-                {messagesArray.map((msg, i) => {
-                  const isUser = i % 2 === 0
-                  const msgStart = SCENE1_END + 10 + i * msgDelay
-                  const visible = frame > msgStart
-                  if (!visible) return null
-
-                  return (
-                    <div key={i} style={{
-                      display: 'flex',
-                      justifyContent: isUser ? 'flex-end' : 'flex-start',
-                      opacity: interpolate(frame, [msgStart, msgStart + 10], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                      transform: `translateY(${spring({ frame: Math.max(0, frame - msgStart), fps, from: 15, to: 0, config: { damping: 14 } })}px)`,
-                    }}>
-                      {!isUser && (
-                        <div style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 10,
-                          background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 14,
-                          marginRight: 10,
-                          flexShrink: 0,
-                        }}>
-                          ✦
-                        </div>
-                      )}
-                      <div style={{
-                        background: isUser
-                          ? `linear-gradient(135deg, ${primaryColor}88, ${secondaryColor}88)`
-                          : '#1A1A26',
-                        border: isUser ? 'none' : `1px solid ${primaryColor}22`,
-                        borderRadius: isUser ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                        padding: '10px 16px',
-                        color: '#FFFFFF',
-                        fontSize: 15,
-                        lineHeight: 1.5,
-                        maxWidth: 340,
-                      }}>
-                        {msg}
-                        {/* Typing cursor on last visible AI message */}
-                        {!isUser && i === messagesArray.filter((_, j) => frame > SCENE1_END + 10 + j * msgDelay).length - 1 && cursorBlink && (
-                          <span style={{ display: 'inline-block', width: 2, height: 14, background: accentColor, marginLeft: 3, verticalAlign: 'middle' }} />
-                        )}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Input bar */}
-              <div style={{
-                padding: '12px 20px',
-                borderTop: `1px solid ${primaryColor}22`,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                background: '#0A0A12',
-              }}>
+                {/* Big background number */}
                 <div style={{
-                  flex: 1,
-                  background: '#16161E',
-                  border: `1px solid ${primaryColor}33`,
-                  borderRadius: 10,
-                  padding: '10px 14px',
-                  color: '#555',
-                  fontSize: 14,
+                  position: 'absolute',
+                  top: '50%', left: '50%',
+                  transform: 'translate(-50%, -60%)',
+                  fontSize: 200,
+                  fontWeight: 900,
+                  color: `${primaryColor}10`,
+                  letterSpacing: '-10px',
+                  userSelect: 'none',
+                  lineHeight: 1,
                 }}>
-                  Describe your video...
+                  {String(i + 1).padStart(2, '0')}
                 </div>
+
                 <div style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  background: primaryColor,
+                  fontSize: 68,
+                  fontWeight: 800,
+                  color: '#FFFFFF',
+                  letterSpacing: '-2px',
+                  lineHeight: 1.1,
+                  position: 'relative',
+                  zIndex: 1,
+                  textShadow: `0 0 50px ${primaryColor}44`,
+                  maxWidth: 1000,
+                }}>
+                  {feature}
+                </div>
+
+                <div style={{
+                  height: 3,
+                  width: interpolate(featureSlotFrame, [10, 38], [0, 220], { extrapolateRight: 'clamp' }),
+                  background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor})`,
+                  borderRadius: 2,
+                  margin: '22px auto 0',
+                  boxShadow: `0 0 14px ${primaryColor}88`,
+                }} />
+              </div>
+            )
+          })}
+
+          {/* Progress dots */}
+          <div style={{ position: 'absolute', bottom: 60, display: 'flex', gap: 10 }}>
+            {featuresArray.map((_, i) => (
+              <div key={i} style={{
+                width: i === currentFeatureIndex ? 30 : 8,
+                height: 8,
+                borderRadius: 4,
+                background: i === currentFeatureIndex ? primaryColor : `${primaryColor}33`,
+                boxShadow: i === currentFeatureIndex ? `0 0 10px ${primaryColor}` : 'none',
+                transition: 'all 0.3s',
+              }} />
+            ))}
+          </div>
+
+        </AbsoluteFill>
+      )}
+
+      {/* ══════════════════════════════════
+          SCENE 3 — Benefits with Dispersion
+      ══════════════════════════════════ */}
+      {scene === 2 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 160px' }}>
+
+          <div style={{
+            color: primaryColor,
+            fontSize: 12,
+            fontWeight: 700,
+            letterSpacing: 6,
+            textTransform: 'uppercase',
+            opacity: fadeIn(S2, S2 + 15),
+            marginBottom: 56,
+            filter: `drop-shadow(0 0 8px ${primaryColor})`,
+          }}>
+            Why Choose Us
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32, width: '100%', maxWidth: 1000 }}>
+            {benefitsArray.map((benefit, i) => {
+              const bStart = S2 + 10 + i * 18
+              const bOp = interpolate(frame, [bStart, bStart + 14], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+              const bX = spring({ frame: Math.max(0, frame - bStart), fps, from: -70, to: 0, config: { damping } })
+              const scatter = interpolate(frame, [bStart, bStart + 20], [10, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+              return (
+                <div key={i} style={{
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 16,
+                  gap: 28,
+                  opacity: bOp,
+                  transform: `translateX(${bX}px)`,
+                  filter: `blur(${scatter}px)`,
                 }}>
-                  ↑
-                </div>
-              </div>
-            </div>
-          </AbsoluteFill>
-        )
-      })()}
-
-      {/* ============ SCENE 3: Features ============ */}
-      {currentScene === 2 && (() => {
-        const sf = sceneFrame(SCENE2_END)
-        return (
-          <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 100px' }}>
-
-            <div style={{
-              color: accentColor,
-              fontSize: 14,
-              fontWeight: 600,
-              letterSpacing: 4,
-              textTransform: 'uppercase',
-              opacity: fadeIn(SCENE2_END, SCENE2_END + 15),
-              marginBottom: 24,
-            }}>
-              ✦ Everything you need
-            </div>
-
-            <div style={{
-              fontSize: 64,
-              fontWeight: 800,
-              color: '#FFFFFF',
-              opacity: fadeIn(SCENE2_END + 5, SCENE2_END + 25),
-              transform: `translateY(${slideUp(SCENE2_END + 5)}px)`,
-              textAlign: 'center',
-              letterSpacing: '-2px',
-              marginBottom: 64,
-            }}>
-              Built different.
-            </div>
-
-            <div style={{ display: 'flex', gap: 32, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {featuresArray.map((feature, i) => {
-                const featureStart = SCENE2_END + 20 + i * 12
-                const icons = ['⚡', '🎯', '🚀', '✨', '🔥', '💎']
-                return (
-                  <div key={i} style={{
-                    background: '#0E0E18',
-                    border: `1px solid ${primaryColor}33`,
-                    borderRadius: 20,
-                    padding: '32px 40px',
-                    minWidth: 240,
-                    opacity: interpolate(frame, [featureStart, featureStart + 15], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                    transform: `translateY(${spring({ frame: Math.max(0, frame - featureStart), fps, from: 40, to: 0, config: { damping } })}px)`,
-                    boxShadow: `0 0 40px ${primaryColor}11`,
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}>
-                    {/* Card glow top */}
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      height: 1,
-                      background: `linear-gradient(90deg, transparent, ${primaryColor}88, transparent)`,
-                    }} />
-                    <div style={{ fontSize: 36, marginBottom: 16 }}>{icons[i % icons.length]}</div>
-                    <div style={{ color: '#FFFFFF', fontSize: 20, fontWeight: 600, lineHeight: 1.3 }}>{feature}</div>
+                  <div style={{
+                    width: 14, height: 14,
+                    borderRadius: '50%',
+                    background: primaryColor,
+                    flexShrink: 0,
+                    boxShadow: `0 0 18px ${primaryColor}, 0 0 36px ${primaryColor}66`,
+                  }} />
+                  <div style={{ fontSize: 34, fontWeight: 700, color: '#FFFFFF', letterSpacing: '-0.5px' }}>
+                    {benefit}
                   </div>
-                )
-              })}
-            </div>
-          </AbsoluteFill>
-        )
-      })()}
+                </div>
+              )
+            })}
+          </div>
 
-      {/* ============ SCENE 4: CTA ============ */}
-      {currentScene === 3 && (() => {
-        const sf = sceneFrame(SCENE3_END)
-        const pulse = interpolate(frame % 40, [0, 20, 40], [1, 1.03, 1])
-        return (
-          <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        </AbsoluteFill>
+      )}
 
-            {/* Big glow behind CTA */}
+      {/* ══════════════════════════════════
+          SCENE 4 — CTA Explosion
+      ══════════════════════════════════ */}
+      {scene === 3 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+
+          <ParticleBurst startFrame={S3 + 4} count={32} />
+          <ParticleBurst startFrame={S3 + 18} count={20} />
+
+          {/* Bloom ring */}
+          <div style={{
+            position: 'absolute',
+            width: 800, height: 800,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${primaryColor}18 0%, transparent 65%)`,
+            transform: `scale(${bloom * scaleSpring(S3, 0.5)})`,
+            pointerEvents: 'none',
+          }} />
+
+          <div style={{
+            fontSize: 20,
+            fontWeight: 300,
+            color: '#555',
+            opacity: fadeIn(S3, S3 + 14),
+            marginBottom: 8,
+            letterSpacing: 3,
+            textTransform: 'uppercase',
+          }}>
+            Starting at
+          </div>
+
+          <div style={{
+            fontSize: 130,
+            fontWeight: 900,
+            color: '#FFFFFF',
+            opacity: fadeIn(S3 + 5, S3 + 20),
+            transform: `scale(${scaleSpring(S3 + 5, 0.6)})`,
+            letterSpacing: '-5px',
+            textShadow: `0 0 70px ${primaryColor}55`,
+            marginBottom: 44,
+            lineHeight: 1,
+          }}>
+            {price}
+          </div>
+
+          {/* CTA button */}
+          <div style={{
+            opacity: fadeIn(S3 + 16, S3 + 30),
+            transform: `scale(${scaleSpring(S3 + 16, 0.8) * bloom})`,
+          }}>
             <div style={{
-              position: 'absolute',
-              width: 600,
-              height: 600,
-              borderRadius: '50%',
-              background: `radial-gradient(circle, ${primaryColor}22 0%, transparent 70%)`,
-              transform: `scale(${pulse})`,
-            }} />
-
-            <div style={{
-              color: accentColor,
-              fontSize: 14,
-              fontWeight: 600,
-              letterSpacing: 4,
-              textTransform: 'uppercase',
-              opacity: fadeIn(SCENE3_END, SCENE3_END + 15),
-              marginBottom: 24,
-            }}>
-              ✦ Start creating
-            </div>
-
-            <div style={{
-              fontSize: 80,
-              fontWeight: 900,
+              background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+              borderRadius: 60,
+              padding: '24px 88px',
               color: '#FFFFFF',
-              opacity: fadeIn(SCENE3_END + 5, SCENE3_END + 25),
-              transform: `translateY(${slideUp(SCENE3_END + 5)}px)`,
-              textAlign: 'center',
-              letterSpacing: '-3px',
-              lineHeight: 1,
-              marginBottom: 16,
+              fontSize: 26,
+              fontWeight: 800,
+              boxShadow: `0 0 60px ${primaryColor}55, 0 0 120px ${primaryColor}22`,
+              letterSpacing: 0.5,
             }}>
-              {productName}
+              {callToAction} →
             </div>
+          </div>
 
-            <div style={{
-              fontSize: 22,
-              color: '#888',
-              opacity: fadeIn(SCENE3_END + 15, SCENE3_END + 35),
-              marginBottom: 56,
-              textAlign: 'center',
-            }}>
-              {price}
-            </div>
+          {/* Product name watermark */}
+          <div style={{
+            position: 'absolute',
+            bottom: 44,
+            color: `${primaryColor}66`,
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: 6,
+            textTransform: 'uppercase',
+            opacity: fadeIn(S3 + 24, S3 + 38),
+          }}>
+            {productName}
+          </div>
 
-            <div style={{
-              opacity: fadeIn(SCENE3_END + 25, SCENE3_END + 45),
-              transform: `translateY(${slideUp(SCENE3_END + 25)}px) scale(${pulse})`,
-            }}>
-              <div style={{
-                background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                borderRadius: 60,
-                padding: '20px 64px',
-                color: '#FFFFFF',
-                fontSize: 22,
-                fontWeight: 800,
-                letterSpacing: 0.5,
-                boxShadow: `0 0 60px ${primaryColor}55`,
-              }}>
-                {callToAction} →
-              </div>
-            </div>
+        </AbsoluteFill>
+      )}
 
-            {/* Bottom tagline */}
-            <div style={{
-              position: 'absolute',
-              bottom: 60,
-              color: '#333',
-              fontSize: 14,
-              fontWeight: 500,
-              letterSpacing: 3,
-              textTransform: 'uppercase',
-              opacity: fadeIn(SCENE3_END + 40, SCENE3_END + 60),
-            }}>
-              {tagline}
-            </div>
-          </AbsoluteFill>
-        )
-      })()}
-
-      {/* Scene transition overlay */}
-      {[SCENE1_END, SCENE2_END, SCENE3_END].map((t, i) => (
+      {/* Scene flash transitions */}
+      {[S1, S2, S3].map((t, i) => (
         <AbsoluteFill key={i} style={{
           background: '#000000',
-          opacity: interpolate(frame, [t - 5, t, t + 8], [0, 0.8, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
+          opacity: flashOpacity(t),
           pointerEvents: 'none',
+          zIndex: 50,
         }} />
       ))}
 

@@ -1,324 +1,308 @@
+// LOCATION: src/templates/ExplainerVideo.jsx
+
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion'
 
 export const ExplainerVideo = ({
-  topic = 'Your Big Idea',
-  brandName = 'Your Brand',
-  problemStatement = 'People struggle with this every single day',
-  solutionStatement = 'We built something that changes everything',
-  howItWorks = 'Sign up in seconds, Set your preferences, Watch the magic happen',
-  proofPoint = '10,000+ happy users',
-  callToAction = 'Try for Free',
-  primaryColor = '#0EA5E9',
+  topic = 'Your Topic',
+  problem = 'The problem people face every single day',
+  solution = 'Your amazing solution that changes everything',
+  howItWorks = 'Step One, Step Two, Step Three, Step Four',
+  stats = '10x faster, 50% cheaper, 99% accurate',
+  callToAction = 'Learn More',
+  primaryColor = '#14B8A6',
   secondaryColor = '#6366F1',
   accentColor = '#F59E0B',
   fontFamily = 'Inter',
-  pace = 'Medium',
+  style = 'Simple',
   tone = 'Friendly',
-  style = 'Bold',
+  pace = 'Medium',
 }) => {
   const frame = useCurrentFrame()
   const { fps, durationInFrames } = useVideoConfig()
 
-  const damping = pace === 'Fast' ? 20 : pace === 'Slow' ? 8 : 12
-
   const stepsArray = typeof howItWorks === 'string'
     ? howItWorks.split(',').map(s => s.trim()).filter(Boolean)
-    : howItWorks
+    : Array.isArray(howItWorks) ? howItWorks : []
 
-  // Proportional scene timing
-  const S1 = Math.floor(durationInFrames * 0.15)  // Hook
-  const S2 = Math.floor(durationInFrames * 0.35)  // Problem
-  const S3 = Math.floor(durationInFrames * 0.55)  // Solution
-  const S4 = Math.floor(durationInFrames * 0.78)  // How it works
-  const S5 = durationInFrames                      // CTA
+  const statsArray = typeof stats === 'string'
+    ? stats.split(',').map(s => s.trim()).filter(Boolean)
+    : Array.isArray(stats) ? stats : []
 
-  const currentScene = frame < S1 ? 0 : frame < S2 ? 1 : frame < S3 ? 2 : frame < S4 ? 3 : 4
+  const damping = pace === 'Fast' ? 22 : pace === 'Slow' ? 8 : 12
 
+  // ── Proportional scene timing ──
+  const S1 = Math.floor(durationInFrames * 0.18)
+  const S2 = Math.floor(durationInFrames * 0.38)
+  const S3 = Math.floor(durationInFrames * 0.58)
+  const S4 = Math.floor(durationInFrames * 0.80)
+
+  const scene = frame < S1 ? 0 : frame < S2 ? 1 : frame < S3 ? 2 : frame < S4 ? 3 : 4
+
+  // ── Helpers ──
   const fadeIn = (start, end) =>
     interpolate(frame, [start, end], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
-  const slideUp = (start, dist = 50) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: dist, to: 0, config: { damping, stiffness: 100 } })
+  const scaleSpring = (start, from = 0.7) =>
+    spring({ frame: Math.max(0, frame - start), fps, from, to: 1, config: { damping } })
 
-  const slideIn = (start, dir = 1) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: 80 * dir, to: 0, config: { damping } })
+  const outroOpacity = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
 
-  const outroOpacity = interpolate(frame, [durationInFrames - 20, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
+  const flashOpacity = (t) =>
+    interpolate(frame, [t - 3, t, t + 8], [0, 0.9, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
-  const toneColor = tone === 'Serious' ? '#6B7280' : tone === 'Professional' ? primaryColor : accentColor
+  const toneColor = tone === 'Casual' ? accentColor : tone === 'Serious' ? '#6B7280' : tone === 'Professional' ? secondaryColor : primaryColor
 
-  // Animated counter for proof point
-  const countMatch = proofPoint.match(/[\d,]+/)
-  const countNum = countMatch ? parseInt(countMatch[0].replace(/,/g, '')) : null
+  // ── Kinetic word-by-word reveal ──
+  const KineticText = ({ text, startFrame, fontSize = 60, color = '#FFFFFF', stagger = 8 }) => {
+    const words = text.split(' ')
+    return (
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0 12px', alignItems: 'center' }}>
+        {words.map((word, i) => {
+          const wStart = startFrame + i * stagger
+          const op = interpolate(frame, [wStart, wStart + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+          const y = spring({ frame: Math.max(0, frame - wStart), fps, from: 30, to: 0, config: { damping } })
+          const sc = spring({ frame: Math.max(0, frame - wStart), fps, from: 0.7, to: 1, config: { damping: 8 } })
+          return (
+            <span key={i} style={{
+              fontSize, fontWeight: 800, color,
+              opacity: op,
+              transform: `translateY(${y}px) scale(${sc})`,
+              display: 'inline-block',
+              letterSpacing: '-1px',
+              lineHeight: 1.2,
+            }}>
+              {word}
+            </span>
+          )
+        })}
+      </div>
+    )
+  }
+
+  // ── Bubble pop ──
+  const BubblePop = ({ text, startFrame, color = primaryColor, fontSize = 22 }) => {
+    const sc = spring({ frame: Math.max(0, frame - startFrame), fps, from: 0, to: 1, config: { damping: 6, stiffness: 200 } })
+    const op = interpolate(frame, [startFrame, startFrame + 8], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    return (
+      <div style={{
+        background: `${color}20`,
+        border: `1.5px solid ${color}55`,
+        borderRadius: 50,
+        padding: '12px 28px',
+        color, fontSize, fontWeight: 700,
+        opacity: op,
+        transform: `scale(${sc})`,
+        display: 'inline-block',
+        boxShadow: `0 0 20px ${color}33`,
+      }}>
+        {text}
+      </div>
+    )
+  }
+
+  // ── Underline draw ──
+  const UnderlineDraw = ({ startFrame, width = 200, color = primaryColor }) => (
+    <div style={{
+      height: 3,
+      width: interpolate(frame, [startFrame, startFrame + 30], [0, width], { extrapolateRight: 'clamp' }),
+      background: `linear-gradient(90deg, ${color}, ${secondaryColor})`,
+      borderRadius: 2,
+      boxShadow: `0 0 12px ${color}88`,
+      margin: '10px auto 0',
+    }} />
+  )
+
+  // ── Chart bar build-up ──
+  const ChartBar = ({ label, percent, startFrame, color = primaryColor, index = 0 }) => {
+    const barWidth = interpolate(frame, [startFrame + index * 12, startFrame + index * 12 + 35], [0, percent], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    const op = interpolate(frame, [startFrame + index * 8, startFrame + index * 8 + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    return (
+      <div style={{ opacity: op, marginBottom: 18 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ color: '#888', fontSize: 14, fontWeight: 500 }}>{label}</span>
+          <span style={{ color, fontSize: 14, fontWeight: 700 }}>{Math.round(barWidth)}%</span>
+        </div>
+        <div style={{ height: 8, background: '#111', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${barWidth}%`,
+            background: `linear-gradient(90deg, ${color}, ${secondaryColor})`,
+            borderRadius: 4,
+            boxShadow: `0 0 10px ${color}88`,
+          }} />
+        </div>
+      </div>
+    )
+  }
+
+  // ── Big chapter number ──
+  const ChapterNumber = ({ num, color = primaryColor }) => (
+    <div style={{
+      position: 'absolute',
+      fontSize: 300,
+      fontWeight: 900,
+      color: `${color}08`,
+      top: '50%', left: '50%',
+      transform: 'translate(-50%, -52%)',
+      letterSpacing: '-15px',
+      userSelect: 'none',
+      lineHeight: 1,
+      pointerEvents: 'none',
+    }}>
+      {num}
+    </div>
+  )
 
   return (
-    <AbsoluteFill style={{ background: '#08080F', fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
+    <AbsoluteFill style={{ background: '#06060F', fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
 
-      {/* Ambient glow layers */}
+      {/* Fixed background glow */}
       <AbsoluteFill style={{
-        background: `radial-gradient(ellipse at 15% 50%, ${primaryColor}12 0%, transparent 55%),
-                     radial-gradient(ellipse at 85% 50%, ${secondaryColor}0E 0%, transparent 50%)`,
+        background: `
+          radial-gradient(ellipse at 25% 50%, ${primaryColor}12 0%, transparent 50%),
+          radial-gradient(ellipse at 75% 50%, ${secondaryColor}0E 0%, transparent 50%)
+        `,
       }} />
 
-      {/* Grid */}
-      <AbsoluteFill style={{
-        backgroundImage: `linear-gradient(${primaryColor}07 1px, transparent 1px), linear-gradient(90deg, ${primaryColor}07 1px, transparent 1px)`,
-        backgroundSize: '80px 80px',
-      }} />
-
-      {/* ===== SCENE 1: Hook ===== */}
-      {currentScene === 0 && (
-        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-
-          {/* Animated rings */}
-          {[300, 500, 700].map((size, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              width: size,
-              height: size,
-              borderRadius: '50%',
-              border: `1px solid ${primaryColor}${i === 0 ? '33' : i === 1 ? '22' : '11'}`,
-              transform: `scale(${interpolate(frame, [i * 5, S1], [0, 1])})`,
-              opacity: interpolate(frame, [i * 5, S1 * 0.6, S1], [0, 1, 0.3]),
-            }} />
-          ))}
+      {/* ══════════════════════════════════
+          SCENE 1 — Topic Intro
+      ══════════════════════════════════ */}
+      {scene === 0 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 120px' }}>
+          <ChapterNumber num="01" color={primaryColor} />
 
           <div style={{
-            color: primaryColor,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 6,
+            color: toneColor, fontSize: 13, fontWeight: 700, letterSpacing: 7,
             textTransform: 'uppercase',
-            opacity: fadeIn(0, 15),
-            marginBottom: 20,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
+            opacity: fadeIn(0, 14), marginBottom: 28,
+            display: 'flex', alignItems: 'center', gap: 14,
+            filter: `drop-shadow(0 0 8px ${toneColor})`,
           }}>
-            <div style={{ width: 24, height: 1, background: primaryColor }} />
-            {brandName}
-            <div style={{ width: 24, height: 1, background: primaryColor }} />
+            <div style={{ width: 36, height: 1, background: toneColor }} />
+            Explainer
+            <div style={{ width: 36, height: 1, background: toneColor }} />
           </div>
 
-          <div style={{
-            fontSize: 100,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(8, 25),
-            transform: `translateY(${slideUp(8, 60)}px)`,
-            textAlign: 'center',
-            letterSpacing: '-4px',
-            lineHeight: 0.95,
-            marginBottom: 28,
-            maxWidth: 1400,
-            padding: '0 80px',
-          }}>
-            {topic}
-          </div>
+          <KineticText text={topic} startFrame={6} fontSize={88} color="#FFFFFF" stagger={6} />
+          <UnderlineDraw startFrame={20} width={320} color={primaryColor} />
 
-          <div style={{
-            width: interpolate(frame, [20, 50], [0, 160], { extrapolateRight: 'clamp' }),
-            height: 3,
-            background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
-            borderRadius: 2,
-            opacity: fadeIn(20, 35),
-          }} />
+          <div style={{ display: 'flex', gap: 16, marginTop: 44, flexWrap: 'wrap', justifyContent: 'center' }}>
+            {statsArray.map((stat, i) => (
+              <BubblePop key={i} text={stat} startFrame={28 + i * 12} color={[primaryColor, secondaryColor, accentColor][i % 3]} fontSize={18} />
+            ))}
+          </div>
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 2: Problem ===== */}
-      {currentScene === 1 && (
-        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 160px' }}>
+      {/* ══════════════════════════════════
+          SCENE 2 — Problem
+      ══════════════════════════════════ */}
+      {scene === 1 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 140px' }}>
+          <ChapterNumber num="02" color="#EF4444" />
 
-          {/* Red problem accent */}
           <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            height: 4,
-            background: `linear-gradient(90deg, transparent, #EF444488, transparent)`,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+            background: 'linear-gradient(90deg, transparent, #EF444488, transparent)',
             opacity: fadeIn(S1, S1 + 20),
           }} />
 
-          <div style={{
-            fontSize: 80,
-            opacity: fadeIn(S1, S1 + 20),
-            marginBottom: 32,
-            transform: `scale(${spring({ frame: Math.max(0, frame - S1), fps, from: 0.5, to: 1, config: { damping: 8 } })})`,
-          }}>
-            😤
-          </div>
+          <div style={{ fontSize: 56, opacity: fadeIn(S1, S1 + 15), transform: `scale(${scaleSpring(S1, 0.4)})`, marginBottom: 20 }}>⚠️</div>
 
           <div style={{
-            color: '#EF4444',
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 5,
+            color: '#EF4444', fontSize: 12, fontWeight: 700, letterSpacing: 6,
             textTransform: 'uppercase',
-            opacity: fadeIn(S1 + 5, S1 + 20),
-            marginBottom: 24,
+            opacity: fadeIn(S1 + 6, S1 + 20), marginBottom: 28,
+            filter: 'drop-shadow(0 0 8px #EF4444)',
           }}>
             The Problem
           </div>
 
-          <div style={{
-            fontSize: 56,
-            fontWeight: 800,
-            color: '#FFFFFF',
-            opacity: fadeIn(S1 + 12, S1 + 30),
-            transform: `translateY(${slideUp(S1 + 12, 40)}px)`,
-            textAlign: 'center',
-            lineHeight: 1.15,
-            letterSpacing: '-1.5px',
-            maxWidth: 1100,
-          }}>
-            {problemStatement}
-          </div>
-
-          {/* Underline animation */}
-          <div style={{
-            marginTop: 40,
-            height: 2,
-            width: interpolate(frame, [S1 + 30, S1 + 60], [0, 300], { extrapolateRight: 'clamp' }),
-            background: 'linear-gradient(90deg, #EF4444, transparent)',
-            borderRadius: 1,
-          }} />
+          <KineticText text={problem} startFrame={S1 + 12} fontSize={56} color="#FFFFFF" stagger={5} />
+          <UnderlineDraw startFrame={S1 + 28} width={280} color="#EF4444" />
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 3: Solution ===== */}
-      {currentScene === 2 && (
-        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 160px' }}>
+      {/* ══════════════════════════════════
+          SCENE 3 — Solution + Charts
+      ══════════════════════════════════ */}
+      {scene === 2 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 140px' }}>
+          <ChapterNumber num="03" color={primaryColor} />
 
-          {/* Green solution accent */}
           <div style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            height: 4,
+            position: 'absolute', top: 0, left: 0, right: 0, height: 4,
             background: `linear-gradient(90deg, transparent, ${primaryColor}88, transparent)`,
             opacity: fadeIn(S2, S2 + 20),
           }} />
 
-          <div style={{
-            fontSize: 80,
-            opacity: fadeIn(S2, S2 + 20),
-            marginBottom: 32,
-            transform: `scale(${spring({ frame: Math.max(0, frame - S2), fps, from: 0.5, to: 1, config: { damping: 8 } })})`,
-          }}>
-            💡
-          </div>
+          <div style={{ fontSize: 56, opacity: fadeIn(S2, S2 + 15), transform: `scale(${scaleSpring(S2, 0.4)})`, marginBottom: 20 }}>💡</div>
 
           <div style={{
-            color: primaryColor,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 5,
+            color: toneColor, fontSize: 12, fontWeight: 700, letterSpacing: 6,
             textTransform: 'uppercase',
-            opacity: fadeIn(S2 + 5, S2 + 20),
-            marginBottom: 24,
+            opacity: fadeIn(S2 + 6, S2 + 20), marginBottom: 28,
+            filter: `drop-shadow(0 0 8px ${toneColor})`,
           }}>
             The Solution
           </div>
 
-          <div style={{
-            fontSize: 56,
-            fontWeight: 800,
-            color: '#FFFFFF',
-            opacity: fadeIn(S2 + 12, S2 + 30),
-            transform: `translateY(${slideUp(S2 + 12, 40)}px)`,
-            textAlign: 'center',
-            lineHeight: 1.15,
-            letterSpacing: '-1.5px',
-            maxWidth: 1100,
-          }}>
-            {solutionStatement}
-          </div>
+          <KineticText text={solution} startFrame={S2 + 12} fontSize={52} color="#FFFFFF" stagger={5} />
+          <UnderlineDraw startFrame={S2 + 28} width={280} color={primaryColor} />
 
-          {/* Brand name stamp */}
-          <div style={{
-            marginTop: 48,
-            background: `${primaryColor}22`,
-            border: `1px solid ${primaryColor}44`,
-            borderRadius: 50,
-            padding: '10px 32px',
-            color: primaryColor,
-            fontSize: 16,
-            fontWeight: 700,
-            letterSpacing: 2,
-            opacity: fadeIn(S2 + 30, S2 + 50),
-          }}>
-            {brandName}
+          <div style={{ marginTop: 44, width: 580, opacity: fadeIn(S2 + 30, S2 + 45) }}>
+            <ChartBar label="Performance" percent={92} startFrame={S2 + 32} color={primaryColor} index={0} />
+            <ChartBar label="Efficiency" percent={85} startFrame={S2 + 32} color={secondaryColor} index={1} />
+            <ChartBar label="Accuracy" percent={97} startFrame={S2 + 32} color={accentColor} index={2} />
           </div>
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 4: How It Works ===== */}
-      {currentScene === 3 && (
-        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 120px' }}>
+      {/* ══════════════════════════════════
+          SCENE 4 — How It Works
+      ══════════════════════════════════ */}
+      {scene === 3 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 80px' }}>
+          <ChapterNumber num="04" color={secondaryColor} />
 
           <div style={{
-            color: accentColor,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 5,
+            color: toneColor, fontSize: 12, fontWeight: 700, letterSpacing: 6,
             textTransform: 'uppercase',
-            opacity: fadeIn(S3, S3 + 15),
-            marginBottom: 56,
+            opacity: fadeIn(S3, S3 + 14), marginBottom: 52,
+            filter: `drop-shadow(0 0 8px ${toneColor})`,
           }}>
-            How it works
+            How It Works
           </div>
 
-          <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start', width: '100%', maxWidth: 1200, justifyContent: 'center' }}>
+          <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1400 }}>
             {stepsArray.map((step, i) => {
-              const sStart = S3 + 15 + i * 20
+              const sStart = S3 + 12 + i * 16
+              const sOp = interpolate(frame, [sStart, sStart + 14], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+              const sY = spring({ frame: Math.max(0, frame - sStart), fps, from: 40, to: 0, config: { damping } })
               return (
-                <div key={i} style={{ display: 'flex', alignItems: 'flex-start', flex: 1 }}>
+                <div key={i} style={{ display: 'flex', alignItems: 'flex-start' }}>
                   <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    flex: 1,
-                    opacity: interpolate(frame, [sStart, sStart + 15], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                    transform: `translateY(${spring({ frame: Math.max(0, frame - sStart), fps, from: 40, to: 0, config: { damping } })}px)`,
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16,
+                    opacity: sOp, transform: `translateY(${sY}px)`,
+                    maxWidth: 220, padding: '0 20px',
                   }}>
-                    {/* Step circle */}
                     <div style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: '50%',
+                      width: 64, height: 64, borderRadius: '50%',
                       background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 26,
-                      fontWeight: 800,
-                      color: '#FFFFFF',
-                      marginBottom: 24,
-                      boxShadow: `0 0 30px ${primaryColor}44`,
-                      flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 26, fontWeight: 900, color: '#FFFFFF',
+                      boxShadow: `0 0 24px ${primaryColor}55`,
                     }}>
                       {i + 1}
                     </div>
-
-                    <div style={{
-                      color: '#FFFFFF',
-                      fontSize: 20,
-                      fontWeight: 600,
-                      textAlign: 'center',
-                      lineHeight: 1.4,
-                      maxWidth: 260,
-                    }}>
+                    <div style={{ color: '#FFFFFF', fontSize: 18, fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>
                       {step}
                     </div>
                   </div>
-
-                  {/* Arrow between steps */}
                   {i < stepsArray.length - 1 && (
                     <div style={{
-                      color: `${primaryColor}44`,
-                      fontSize: 28,
-                      marginTop: 22,
-                      opacity: interpolate(frame, [sStart + 10, sStart + 25], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                      flexShrink: 0,
+                      color: `${primaryColor}55`, fontSize: 28, marginTop: 18,
+                      opacity: interpolate(frame, [sStart + 10, sStart + 22], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
                     }}>
                       →
                     </div>
@@ -327,74 +311,51 @@ export const ExplainerVideo = ({
               )
             })}
           </div>
-
-          {/* Proof point */}
-          <div style={{
-            marginTop: 60,
-            background: `${accentColor}15`,
-            border: `1px solid ${accentColor}33`,
-            borderRadius: 16,
-            padding: '16px 40px',
-            opacity: fadeIn(S3 + 50, S3 + 70),
-          }}>
-            <span style={{ color: accentColor, fontSize: 22, fontWeight: 800 }}>{proofPoint}</span>
-          </div>
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 5: CTA ===== */}
-      {currentScene === 4 && (
+      {/* ══════════════════════════════════
+          SCENE 5 — CTA
+      ══════════════════════════════════ */}
+      {scene === 4 && (
         <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <ChapterNumber num="05" color={primaryColor} />
 
           <div style={{
-            position: 'absolute',
-            width: 700,
-            height: 700,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${primaryColor}18 0%, transparent 65%)`,
-            transform: `scale(${interpolate(frame % 60, [0, 30, 60], [1, 1.06, 1])})`,
+            position: 'absolute', width: 700, height: 700, borderRadius: '50%',
+            background: `radial-gradient(circle, ${primaryColor}15 0%, transparent 65%)`,
+            transform: `scale(${interpolate(frame % 60, [0, 30, 60], [0.95, 1.05, 0.95])})`,
+            pointerEvents: 'none',
           }} />
 
           <div style={{
-            color: primaryColor,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 5,
+            color: toneColor, fontSize: 12, fontWeight: 700, letterSpacing: 6,
             textTransform: 'uppercase',
-            opacity: fadeIn(S4, S4 + 15),
-            marginBottom: 24,
+            opacity: fadeIn(S4, S4 + 14), marginBottom: 20,
+            filter: `drop-shadow(0 0 8px ${toneColor})`,
           }}>
-            {brandName}
+            Get Started
+          </div>
+
+          <KineticText text={topic} startFrame={S4 + 6} fontSize={80} color="#FFFFFF" stagger={5} />
+          <UnderlineDraw startFrame={S4 + 22} width={300} color={primaryColor} />
+
+          <div style={{ display: 'flex', gap: 16, marginTop: 36, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 44 }}>
+            {statsArray.map((stat, i) => (
+              <BubblePop key={i} text={stat} startFrame={S4 + 28 + i * 10} color={[primaryColor, secondaryColor, accentColor][i % 3]} fontSize={16} />
+            ))}
           </div>
 
           <div style={{
-            fontSize: 84,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(S4 + 8, S4 + 25),
-            transform: `translateY(${slideUp(S4 + 8)}px)`,
-            textAlign: 'center',
-            letterSpacing: '-3px',
-            lineHeight: 1,
-            marginBottom: 48,
-            maxWidth: 1200,
-            padding: '0 80px',
-          }}>
-            {topic}
-          </div>
-
-          <div style={{
-            opacity: fadeIn(S4 + 22, S4 + 40),
-            transform: `translateY(${slideUp(S4 + 22, 30)}px)`,
+            opacity: fadeIn(S4 + 36, S4 + 50),
+            transform: `scale(${scaleSpring(S4 + 36, 0.8)})`,
           }}>
             <div style={{
               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-              borderRadius: 60,
-              padding: '22px 80px',
-              color: '#FFFFFF',
-              fontSize: 24,
-              fontWeight: 800,
-              boxShadow: `0 0 60px ${primaryColor}44`,
+              borderRadius: 60, padding: '22px 80px',
+              color: '#FFFFFF', fontSize: 24, fontWeight: 800,
+              boxShadow: `0 0 55px ${primaryColor}55, 0 0 110px ${primaryColor}22`,
+              letterSpacing: 0.5,
             }}>
               {callToAction} →
             </div>
@@ -406,8 +367,9 @@ export const ExplainerVideo = ({
       {[S1, S2, S3, S4].map((t, i) => (
         <AbsoluteFill key={i} style={{
           background: '#000000',
-          opacity: interpolate(frame, [t - 4, t, t + 10], [0, 0.85, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
+          opacity: flashOpacity(t),
           pointerEvents: 'none',
+          zIndex: 50,
         }} />
       ))}
 

@@ -9,12 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.17.10",
     "@remotion/bundler": "^4.0.0",
     "@remotion/captions": "^4.0.434",
     "@remotion/google-fonts": "^4.0.434",
+    "@remotion/noise": "^4.0.435",
     "@remotion/player": "^4.0.0",
     "@remotion/renderer": "^4.0.0",
     "@remotion/shapes": "^4.0.434",
+    "@remotion/three": "^4.0.435",
     "@remotion/transitions": "^4.0.434",
     "archiver": "^6.0.0",
     "chokidar": "^3.6.0",
@@ -29,7 +32,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "remotion": "^4.0.0",
-    "simple-git": "^3.25.0"
+    "simple-git": "^3.25.0",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.6.0",
