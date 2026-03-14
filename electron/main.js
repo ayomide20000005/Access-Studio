@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron')
 const path = require('path')
 
 // Load IPC handlers
@@ -6,6 +6,19 @@ require('./ipc/ffmpeg')
 require('./ipc/project')
 require('./ipc/templates')
 require('./ipc/bundle')
+
+// Register file protocol before app is ready
+// This allows the renderer to load local file:// URLs for custom template bundles
+app.on('ready', () => {
+  protocol.registerFileProtocol('file', (request, callback) => {
+    let filePath = decodeURIComponent(request.url.replace('file:///', ''))
+    // Fix Windows paths — restore drive letter colon
+    if (process.platform === 'win32' && !filePath.startsWith('\\\\')) {
+      filePath = filePath.replace(/^([a-zA-Z])\//, '$1:/')
+    }
+    callback({ path: filePath })
+  })
+})
 
 const { getBuiltInPreviewPaths } = require('./ipc/previewGenerator')
 
@@ -27,6 +40,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
+      webSecurity: false, // allows renderer to load local file:// bundle paths
     },
   })
 

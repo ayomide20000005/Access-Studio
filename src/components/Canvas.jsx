@@ -73,8 +73,6 @@ export default function Canvas({
     ...(selectedStyles || {}),
   }
 
-  const compositionId = template?.composition || 'MainComposition'
-
   const renderPlayer = () => {
     // No template selected
     if (!template) {
@@ -130,21 +128,30 @@ export default function Canvas({
       )
     }
 
-    // Custom template — ready with serveUrl
+    // Custom template — ready with serveUrl — show in iframe
     if (template.isCustom && serveUrl) {
+      const compositionId = template?.composition || 'MainComposition'
+      const allProps = {
+        ...(inputs || {}),
+        ...(selectedStyles || {}),
+      }
+
+      // serveUrl is a local folder path from bundle()
+      // must point to index.html inside that folder, then append composition hash
+      const cleanServeUrl = serveUrl.endsWith('/') ? serveUrl : `${serveUrl}/`
+      const iframeSrc = `${cleanServeUrl}index.html#${compositionId}`
+
       return (
-        <Player
-          serveUrl={serveUrl}
-          compositionId={compositionId}
-          inputProps={customInputProps}
-          durationInFrames={durationInFrames}
-          compositionWidth={1920}
-          compositionHeight={1080}
-          fps={FPS}
-          style={{ width: '100%', height: '100%' }}
-          controls
-          autoPlay={false}
-          loop
+        <iframe
+          key={`${compositionId}-${JSON.stringify(allProps)}`}
+          src={iframeSrc}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            background: '#000',
+          }}
+          title="Custom Template Preview"
         />
       )
     }
