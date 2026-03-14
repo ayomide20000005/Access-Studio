@@ -53,12 +53,21 @@ export const Root = () => {
 }
 \`\`\`
 
+CRITICAL: The id value in Root.jsx (e.g. "MyComposition") MUST exactly match the "composition" value in template.config.json. If they do not match, the template will not preview or render in Acces Studio.
+
 Composition.jsx receives ALL field values as props directly:
 \`\`\`jsx
 export const MyComposition = ({
   title = 'Default Title',
   primaryColor = '#7C3AED',
-  // ... all fields from config
+  duration = 10,  // always available — the video duration in seconds
+  speed = 1,      // always available — playback speed multiplier
+  // ... all other fields from your config come here as props
+  // IMPORTANT: style options from your "styles" config also arrive as individual props
+  // e.g. if your config has "styles": { "mood": ["Energetic", "Calm"] }
+  // then you receive: mood = 'Energetic'
+  mood = 'Energetic',
+  pace = 'Medium',
 }) => {
   const frame = useCurrentFrame()
   const { fps, durationInFrames, width, height } = useVideoConfig()
@@ -75,6 +84,8 @@ template.config.json format:
   "version": "1.0.0",
   "author": "Your Name",
   "composition": "MyComposition",
+  "color": "#7C3AED",
+  "icon": "🎬",
   "fields": [
     { "key": "title", "label": "Title", "type": "text", "placeholder": "e.g. Your Title", "required": true },
     { "key": "description", "label": "Description", "type": "textarea", "placeholder": "e.g. Description" },
@@ -101,6 +112,9 @@ template.config.json format:
 
 AVAILABLE FIELD TYPES:
 text, textarea, color, date, number, image, video, audio, toggle, slider, list, font, select, transition, caption
+Note: transition and caption field types will display as a text input fallback in the sidebar — use select for transitions if you want specific options.
+
+ALWAYS include "color" (hex color for the template card) and "icon" (an emoji) in template.config.json at the top level.
 
 Now please help me build a complete Acces Studio template. I want a template for:`
 
@@ -118,13 +132,34 @@ Acces Studio is a free, offline, no-code desktop video creation app. Here is wha
    - @remotion/google-fonts, @remotion/captions, @remotion/media-utils
    - react (18), framer-motion, gsap, animejs, d3
 
+CRITICAL RULES you must follow:
+- The id value in Root.jsx (e.g. id="MyComposition") MUST exactly match the "composition" value in template.config.json. If they do not match, the template will not work in Acces Studio.
+- Composition.jsx must always accept duration and speed as props with defaults (duration = 10, speed = 1). These are always passed automatically by Acces Studio.
+- If your config has a "styles" section (e.g. "styles": { "mood": ["Energetic", "Calm"] }), those style keys are passed as individual props to Composition.jsx. Make sure Composition.jsx accepts them as props with a default value.
+- Always include "color" (a hex color for the template card) and "icon" (an emoji) in template.config.json.
+
 Output exactly these 4 files:
 - index.js
 - Root.jsx
 - Composition.jsx
 - template.config.json
 
+template.config.json must include these top-level fields:
+{
+  "id": "my-template",
+  "name": "My Template",
+  "description": "...",
+  "version": "1.0.0",
+  "author": "...",
+  "composition": "MyComposition",
+  "color": "#7C3AED",
+  "icon": "🎬",
+  "fields": [...],
+  "styles": {...}
+}
+
 Available field types: text, textarea, color, date, number, image, video, audio, toggle, slider, list, font, select, transition, caption
+Note: transition and caption field types will display as a text input fallback in the sidebar — use select for transitions if you want specific options.
 
 Here is the template code to convert:`
 
@@ -292,6 +327,8 @@ export default function TemplateGuide({ onClose }) {
   "version": "1.0.0",
   "author": "Your Name",
   "composition": "MyComposition",
+  "color": "#7C3AED",
+  "icon": "🎬",
   "fields": [
     {
       "key": "title",
@@ -333,8 +370,8 @@ export default function TemplateGuide({ onClose }) {
                   { type: 'list', desc: 'Multi item list', example: 'Features, Steps, Team Members' },
                   { type: 'font', desc: 'Font family picker', example: 'Title Font, Body Font' },
                   { type: 'select', desc: 'Dropdown with custom options', example: 'Platform, Category, Style' },
-                  { type: 'transition', desc: 'Scene transition picker', example: 'Intro Transition, Scene Change' },
-                  { type: 'caption', desc: 'Subtitle with size, color, position', example: 'Subtitles, Captions' },
+                  { type: 'transition', desc: 'Scene transition picker (displays as text fallback — use select for specific options)', example: 'Intro Transition, Scene Change' },
+                  { type: 'caption', desc: 'Subtitle with size, color, position (displays as text fallback)', example: 'Subtitles, Captions' },
                 ].map((field, i) => (
                   <div
                     key={i}
@@ -363,7 +400,7 @@ export default function TemplateGuide({ onClose }) {
                 </p>
                 {[
                   { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder or copy the composition file contents.' },
-                  { step: '2', title: 'Copy the descriptive prompt below', desc: 'Click the Copy Descriptive Prompt button below. This tells the AI exactly how to convert the template to Acces Studio format.' },
+                  { step: '2', title: 'Copy the descriptive prompt below', desc: 'Click the Copy Descriptive Prompt button below. This tells the AI exactly how to convert the template to Acces Studio format — including the critical rule that the composition id in Root.jsx must match the "composition" value in template.config.json.' },
                   { step: '3', title: 'Paste into any AI', desc: 'Paste the prompt into Claude, ChatGPT or any AI. Then paste the original template code at the end of the prompt.' },
                   { step: '4', title: 'Import into Acces Studio', desc: 'Save the 4 generated files into a folder and import it using the Import Template button. Fields appear automatically.' },
                 ].map((item, i) => (
