@@ -136,10 +136,9 @@ export default function Canvas({
         ...(selectedStyles || {}),
       }
 
-      // serveUrl is a local folder path from bundle()
-      // must point to index.html inside that folder, then append composition hash
-      const cleanServeUrl = serveUrl.endsWith('/') ? serveUrl : `${serveUrl}/`
-      const iframeSrc = `${cleanServeUrl}index.html#${compositionId}`
+      // serveUrl is now http://127.0.0.1:PORT
+      // append index.html and composition hash
+      const iframeSrc = `${serveUrl}/index.html#${compositionId}`
 
       return (
         <iframe
