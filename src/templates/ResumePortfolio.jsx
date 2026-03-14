@@ -1,3 +1,5 @@
+// LOCATION: src/templates/ResumePortfolio.jsx
+
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion'
 
 export const ResumePortfolio = ({
@@ -11,10 +13,9 @@ export const ResumePortfolio = ({
   education = 'BSc Computer Science, MIT',
   contact = 'hello@yourname.com',
   portfolioUrl = 'yourname.com',
-  primaryColor = '#6366F1',
-  secondaryColor = '#8B5CF6',
+  primaryColor = '#7C3AED',
+  secondaryColor = '#4F46E5',
   accentColor = '#EC4899',
-  photoPath = null,
   fontFamily = 'Inter',
   layout = 'Centered',
   tone = 'Professional',
@@ -25,248 +26,284 @@ export const ResumePortfolio = ({
 
   const skillsArray = typeof skills === 'string'
     ? skills.split(',').map(s => s.trim()).filter(Boolean)
-    : skills
+    : Array.isArray(skills) ? skills : []
 
   const companiesArray = typeof companies === 'string'
     ? companies.split(',').map(c => c.trim()).filter(Boolean)
-    : companies
+    : Array.isArray(companies) ? companies : []
 
-  // Proportional scene timing
-  const S1 = Math.floor(durationInFrames * 0.20)  // Identity intro
-  const S2 = Math.floor(durationInFrames * 0.45)  // Skills
-  const S3 = Math.floor(durationInFrames * 0.70)  // Experience + achievement
-  const S4 = durationInFrames                      // Contact CTA
+  const damping = 12
 
-  const currentScene = frame < S1 ? 0 : frame < S2 ? 1 : frame < S3 ? 2 : 3
+  // ── Proportional scene timing ──
+  const S1 = Math.floor(durationInFrames * 0.22) // Identity intro
+  const S2 = Math.floor(durationInFrames * 0.48) // Skills
+  const S3 = Math.floor(durationInFrames * 0.74) // Experience + achievement
+  const S4 = durationInFrames                     // Contact CTA
 
+  const scene = frame < S1 ? 0 : frame < S2 ? 1 : frame < S3 ? 2 : 3
+
+  // ── Helpers ──
   const fadeIn = (start, end) =>
     interpolate(frame, [start, end], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
   const slideUp = (start, dist = 50) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: dist, to: 0, config: { damping: 12, stiffness: 100 } })
+    spring({ frame: Math.max(0, frame - start), fps, from: dist, to: 0, config: { damping } })
 
-  const slideRight = (start) =>
-    spring({ frame: Math.max(0, frame - start), fps, from: -70, to: 0, config: { damping: 12 } })
+  const slideRight = (start, dist = 60) =>
+    spring({ frame: Math.max(0, frame - start), fps, from: -dist, to: 0, config: { damping } })
 
-  const scaleIn = (start, from = 0.7) =>
-    spring({ frame: Math.max(0, frame - start), fps, from, to: 1, config: { damping: 10 } })
+  const slideLeft = (start, dist = 60) =>
+    spring({ frame: Math.max(0, frame - start), fps, from: dist, to: 0, config: { damping } })
 
-  const outroOpacity = interpolate(frame, [durationInFrames - 20, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
+  const scaleSpring = (start, from = 0.7) =>
+    spring({ frame: Math.max(0, frame - start), fps, from, to: 1, config: { damping } })
+
+  const outroOpacity = interpolate(frame, [durationInFrames - 15, durationInFrames], [1, 0], { extrapolateLeft: 'clamp' })
+
+  const flashOpacity = (t) =>
+    interpolate(frame, [t - 3, t, t + 8], [0, 0.6, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
 
   const toneColor = tone === 'Creative' ? accentColor : tone === 'Bold' ? primaryColor : secondaryColor
 
-  // Animated gradient border on avatar
+  // ── Rotating gradient border angle for avatar ──
   const gradientAngle = interpolate(frame, [0, durationInFrames], [0, 360])
 
-  return (
-    <AbsoluteFill style={{ background: '#07070D', fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
+  // ── Skill bar fill ──
+  const SkillBar = ({ skill, index, startFrame }) => {
+    const percent = 70 + (index * 7) % 30
+    const barW = interpolate(frame, [startFrame + index * 10, startFrame + index * 10 + 35], [0, percent], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    const op = interpolate(frame, [startFrame + index * 8, startFrame + index * 8 + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    return (
+      <div style={{ opacity: op, marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+          <span style={{ color: '#4A3728', fontSize: 15, fontWeight: 600 }}>{skill}</span>
+          <span style={{ color: toneColor, fontSize: 13, fontWeight: 700 }}>{Math.round(barW)}%</span>
+        </div>
+        <div style={{ height: 6, background: '#D4B8A0', borderRadius: 3, overflow: 'hidden' }}>
+          <div style={{
+            height: '100%',
+            width: `${barW}%`,
+            background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+            borderRadius: 3,
+            boxShadow: `0 0 8px ${primaryColor}55`,
+          }} />
+        </div>
+      </div>
+    )
+  }
 
-      {/* Vertical accent bar left */}
+  // ── Bubble pop achievement ──
+  const BubblePop = ({ text, startFrame, color = primaryColor }) => {
+    const sc = spring({ frame: Math.max(0, frame - startFrame), fps, from: 0, to: 1, config: { damping: 5, stiffness: 200 } })
+    const op = interpolate(frame, [startFrame, startFrame + 8], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    return (
       <div style={{
-        position: 'absolute',
-        top: 0, bottom: 0,
-        left: 0,
-        width: 6,
-        background: `linear-gradient(180deg, ${primaryColor}, ${secondaryColor}, ${accentColor})`,
-        opacity: 0.8,
-      }} />
+        background: `${color}18`,
+        border: `1.5px solid ${color}44`,
+        borderRadius: 14, padding: '14px 24px',
+        opacity: op, transform: `scale(${sc})`,
+        display: 'inline-block',
+        boxShadow: `0 4px 16px ${color}22`,
+      }}>
+        <span style={{ color: '#2D1B00', fontSize: 17, fontWeight: 600 }}>{text}</span>
+      </div>
+    )
+  }
 
-      {/* Background glow */}
+  // ── Name split reveal — halves slide in from sides ──
+  const NameSplitReveal = ({ name, startFrame, fontSize = 96 }) => {
+    const words = name.split(' ')
+    const mid = Math.ceil(words.length / 2)
+    const firstHalf = words.slice(0, mid).join(' ')
+    const secondHalf = words.slice(mid).join(' ')
+    const xFirst = spring({ frame: Math.max(0, frame - startFrame), fps, from: -80, to: 0, config: { damping } })
+    const xSecond = spring({ frame: Math.max(0, frame - startFrame), fps, from: 80, to: 0, config: { damping } })
+    const op = interpolate(frame, [startFrame, startFrame + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' })
+    return (
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', justifyContent: 'center', opacity: op }}>
+        <span style={{
+          fontSize, fontWeight: 900, color: '#2D1B00',
+          transform: `translateX(${xFirst}px)`,
+          display: 'inline-block', letterSpacing: '-3px', lineHeight: 1,
+        }}>
+          {firstHalf}
+        </span>
+        {secondHalf && (
+          <span style={{
+            fontSize, fontWeight: 900, color: primaryColor,
+            transform: `translateX(${xSecond}px)`,
+            display: 'inline-block', letterSpacing: '-3px', lineHeight: 1,
+          }}>
+            {secondHalf}
+          </span>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <AbsoluteFill style={{ background: '#E8D5C4', fontFamily, opacity: outroOpacity, overflow: 'hidden' }}>
+
+      {/* Warm ivory peach base */}
       <AbsoluteFill style={{
-        background: `radial-gradient(ellipse at 30% 50%, ${primaryColor}10 0%, transparent 55%),
-                     radial-gradient(ellipse at 75% 30%, ${accentColor}0C 0%, transparent 50%)`,
+        background: `
+          radial-gradient(ellipse at 20% 30%, ${primaryColor}14 0%, transparent 50%),
+          radial-gradient(ellipse at 80% 70%, ${accentColor}10 0%, transparent 50%),
+          linear-gradient(160deg, #F0DDD0 0%, #E8D5C4 50%, #DCC5B0 100%)
+        `,
       }} />
 
-      {/* ===== SCENE 1: Identity Intro ===== */}
-      {currentScene === 0 && (
+      {/* Diagonal accent lines */}
+      <AbsoluteFill style={{
+        backgroundImage: `repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 55px,
+          ${primaryColor}05 55px,
+          ${primaryColor}05 56px
+        )`,
+        pointerEvents: 'none',
+      }} />
+
+      {/* Left accent bar */}
+      <div style={{
+        position: 'absolute', top: 0, bottom: 0, left: 0,
+        width: 6,
+        background: `linear-gradient(180deg, ${primaryColor}, ${accentColor}, ${secondaryColor})`,
+        opacity: 0.85,
+      }} />
+
+      {/* ══════════════════════════════════
+          SCENE 0 — Identity Intro
+      ══════════════════════════════════ */}
+      {scene === 0 && (
         <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 120px' }}>
 
-          {/* Avatar */}
+          {/* Rotating gradient avatar */}
           <div style={{
-            width: 140,
-            height: 140,
-            borderRadius: '50%',
-            background: `conic-gradient(from ${gradientAngle}deg, ${primaryColor}, ${secondaryColor}, ${accentColor}, ${primaryColor})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: 150, height: 150, borderRadius: '50%',
+            background: `conic-gradient(from ${gradientAngle}deg, ${primaryColor}, ${accentColor}, ${secondaryColor}, ${primaryColor})`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             opacity: fadeIn(0, 18),
-            transform: `scale(${scaleIn(0, 0.4)})`,
-            marginBottom: 36,
-            boxShadow: `0 0 60px ${primaryColor}33`,
+            transform: `scale(${scaleSpring(0, 0.4)})`,
+            marginBottom: 32,
+            boxShadow: `0 8px 40px ${primaryColor}33, 0 4px 20px rgba(0,0,0,0.1)`,
           }}>
             <div style={{
-              width: 128,
-              height: 128,
-              borderRadius: '50%',
-              background: '#0A0A14',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 52,
+              width: 136, height: 136, borderRadius: '50%',
+              background: '#E8D5C4',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 56,
             }}>
               👤
             </div>
           </div>
 
-          {/* Name */}
-          <div style={{
-            fontSize: 96,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(10, 26),
-            transform: `translateY(${slideUp(10, 50)}px)`,
-            textAlign: 'center',
-            letterSpacing: '-3px',
-            lineHeight: 1,
-            marginBottom: 16,
-          }}>
-            {fullName}
-          </div>
+          {/* Name split reveal */}
+          <NameSplitReveal name={fullName} startFrame={8} fontSize={96} />
 
-          {/* Animated color bar */}
+          {/* Animated underline */}
           <div style={{
-            height: 3,
-            width: interpolate(frame, [18, 45], [0, 300], { extrapolateRight: 'clamp' }),
-            background: `linear-gradient(90deg, ${primaryColor}, ${secondaryColor}, ${accentColor})`,
-            borderRadius: 2,
-            marginBottom: 20,
+            height: 4,
+            width: interpolate(frame, [16, 46], [0, 340], { extrapolateRight: 'clamp' }),
+            background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+            borderRadius: 2, marginTop: 12, marginBottom: 20,
+            boxShadow: `0 2px 12px ${primaryColor}44`,
           }} />
 
           {/* Title */}
           <div style={{
-            fontSize: 26,
-            fontWeight: 400,
-            color: toneColor,
-            opacity: fadeIn(22, 38),
-            transform: `translateY(${slideUp(22, 25)}px)`,
-            textAlign: 'center',
-            letterSpacing: 0.5,
-            marginBottom: 20,
+            fontSize: 24, fontWeight: 500, color: toneColor,
+            opacity: fadeIn(20, 34),
+            transform: `translateY(${slideUp(20, 20)}px)`,
+            textAlign: 'center', letterSpacing: 0.5, marginBottom: 18,
           }}>
             {title}
           </div>
 
           {/* Bio */}
           <div style={{
-            fontSize: 20,
-            fontWeight: 300,
-            color: '#666',
-            opacity: fadeIn(30, 46),
-            textAlign: 'center',
-            maxWidth: 700,
-            lineHeight: 1.6,
+            fontSize: 18, fontWeight: 300, color: '#6B4F3A',
+            opacity: fadeIn(26, 40),
+            textAlign: 'center', maxWidth: 700, lineHeight: 1.6,
           }}>
             {bio}
           </div>
+
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 2: Skills ===== */}
-      {currentScene === 1 && (
-        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 120px' }}>
+      {/* ══════════════════════════════════
+          SCENE 1 — Skills
+      ══════════════════════════════════ */}
+      {scene === 1 && (
+        <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 140px' }}>
 
           <div style={{
-            color: toneColor,
-            fontSize: 13,
-            fontWeight: 700,
-            letterSpacing: 5,
-            textTransform: 'uppercase',
-            opacity: fadeIn(S1, S1 + 15),
-            marginBottom: 20,
+            color: toneColor, fontSize: 12, fontWeight: 700,
+            letterSpacing: 6, textTransform: 'uppercase',
+            opacity: fadeIn(S1, S1 + 14), marginBottom: 18,
           }}>
             What I do
           </div>
 
           <div style={{
-            fontSize: 64,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(S1 + 8, S1 + 24),
+            fontSize: 62, fontWeight: 900, color: '#2D1B00',
+            opacity: fadeIn(S1 + 8, S1 + 22),
             transform: `translateY(${slideUp(S1 + 8, 40)}px)`,
-            textAlign: 'center',
-            letterSpacing: '-2px',
-            marginBottom: 60,
+            textAlign: 'center', letterSpacing: '-2px', marginBottom: 48,
           }}>
             Skills & Expertise
           </div>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', maxWidth: 1100 }}>
-            {skillsArray.map((skill, i) => {
-              const sStart = S1 + 18 + i * 12
-              const colors = [primaryColor, secondaryColor, accentColor]
-              const c = colors[i % 3]
-              return (
-                <div key={i} style={{
-                  background: `${c}15`,
-                  border: `1px solid ${c}44`,
-                  borderRadius: 14,
-                  padding: '16px 28px',
-                  opacity: interpolate(frame, [sStart, sStart + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                  transform: `translateY(${spring({ frame: Math.max(0, frame - sStart), fps, from: 30, to: 0, config: { damping: 12 } })}px)`,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}>
-                  <div style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0,
-                    height: 2,
-                    background: `linear-gradient(90deg, transparent, ${c}, transparent)`,
-                  }} />
-                  <div style={{ color: '#FFFFFF', fontSize: 18, fontWeight: 600 }}>{skill}</div>
-                </div>
-              )
-            })}
+          {/* Skill bars */}
+          <div style={{ width: '100%', maxWidth: 900 }}>
+            {skillsArray.map((skill, i) => (
+              <SkillBar key={i} skill={skill} index={i} startFrame={S1 + 20} />
+            ))}
           </div>
+
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 3: Experience ===== */}
-      {currentScene === 2 && (
+      {/* ══════════════════════════════════
+          SCENE 2 — Experience + Achievement
+      ══════════════════════════════════ */}
+      {scene === 2 && (
         <AbsoluteFill style={{ display: 'flex', padding: '80px 100px', alignItems: 'center', gap: 80 }}>
 
           {/* Left — experience */}
           <div style={{ flex: 1 }}>
             <div style={{
-              color: toneColor,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: 5,
-              textTransform: 'uppercase',
-              opacity: fadeIn(S2, S2 + 15),
-              marginBottom: 32,
+              color: toneColor, fontSize: 12, fontWeight: 700,
+              letterSpacing: 6, textTransform: 'uppercase',
+              opacity: fadeIn(S2, S2 + 14), marginBottom: 28,
             }}>
               Experience
             </div>
 
             <div style={{
-              fontSize: 52,
-              fontWeight: 800,
-              color: '#FFFFFF',
-              opacity: fadeIn(S2 + 8, S2 + 24),
-              transform: `translateX(${slideRight(S2 + 8)}px)`,
-              letterSpacing: '-1.5px',
-              lineHeight: 1.2,
-              marginBottom: 28,
+              fontSize: 52, fontWeight: 800, color: '#2D1B00',
+              opacity: fadeIn(S2 + 8, S2 + 22),
+              transform: `translateX(${slideRight(S2 + 8, 50)}px)`,
+              letterSpacing: '-1.5px', lineHeight: 1.2, marginBottom: 24,
             }}>
               {experience}
             </div>
 
             {/* Companies */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 28 }}>
               {companiesArray.map((company, i) => {
                 const cStart = S2 + 18 + i * 12
                 return (
                   <div key={i} style={{
-                    background: '#0E0E18',
-                    border: '1px solid #1E1E2E',
-                    borderRadius: 10,
-                    padding: '10px 22px',
-                    color: '#AAAAAA',
-                    fontSize: 16,
-                    fontWeight: 500,
+                    background: '#FFFFFF',
+                    border: '1px solid #C4A882',
+                    borderRadius: 10, padding: '8px 20px',
+                    color: '#4A3728', fontSize: 15, fontWeight: 500,
                     opacity: interpolate(frame, [cStart, cStart + 12], [0, 1], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
-                    transform: `translateX(${spring({ frame: Math.max(0, frame - cStart), fps, from: -30, to: 0, config: { damping: 12 } })}px)`,
+                    transform: `translateX(${spring({ frame: Math.max(0, frame - cStart), fps, from: -28, to: 0, config: { damping } })}px)`,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
                   }}>
                     {company}
                   </div>
@@ -274,162 +311,143 @@ export const ResumePortfolio = ({
               })}
             </div>
 
-            <div style={{
-              color: '#555',
-              fontSize: 16,
-              opacity: fadeIn(S2 + 40, S2 + 55),
-            }}>
+            <div style={{ color: '#8B6A54', fontSize: 15, opacity: fadeIn(S2 + 36, S2 + 48) }}>
               🎓 {education}
             </div>
           </div>
 
           {/* Divider */}
           <div style={{
-            width: 1,
-            alignSelf: 'stretch',
-            background: `linear-gradient(180deg, transparent, ${primaryColor}44, transparent)`,
-            opacity: fadeIn(S2, S2 + 20),
+            width: 1, alignSelf: 'stretch',
+            background: `linear-gradient(180deg, transparent, ${primaryColor}33, transparent)`,
+            opacity: fadeIn(S2, S2 + 18),
           }} />
 
           {/* Right — achievement */}
           <div style={{ flex: 1 }}>
             <div style={{
-              color: accentColor,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: 5,
-              textTransform: 'uppercase',
-              opacity: fadeIn(S2 + 10, S2 + 25),
-              marginBottom: 32,
+              color: accentColor, fontSize: 12, fontWeight: 700,
+              letterSpacing: 6, textTransform: 'uppercase',
+              opacity: fadeIn(S2 + 10, S2 + 24), marginBottom: 28,
             }}>
               Key Achievement
             </div>
 
             <div style={{
-              background: '#0C0C18',
-              border: `1px solid ${accentColor}33`,
-              borderRadius: 20,
-              padding: '36px 40px',
-              opacity: fadeIn(S2 + 18, S2 + 35),
-              transform: `translateY(${spring({ frame: Math.max(0, frame - S2 - 18), fps, from: 40, to: 0, config: { damping: 12 } })}px)`,
-              position: 'relative',
-              overflow: 'hidden',
+              background: '#FFFFFF',
+              border: `1px solid ${primaryColor}33`,
+              borderRadius: 20, padding: '32px 36px',
+              opacity: fadeIn(S2 + 16, S2 + 30),
+              transform: `translateY(${spring({ frame: Math.max(0, frame - S2 - 16), fps, from: 40, to: 0, config: { damping } })}px)`,
+              position: 'relative', overflow: 'hidden',
+              boxShadow: '0 8px 30px rgba(0,0,0,0.1)',
             }}>
               <div style={{
-                position: 'absolute',
-                top: 0, left: 0, right: 0,
-                height: 3,
+                position: 'absolute', top: 0, left: 0, right: 0, height: 3,
                 background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
               }} />
-              <div style={{ color: accentColor, fontSize: 48, marginBottom: 16 }}>🏆</div>
-              <div style={{ color: '#FFFFFF', fontSize: 24, fontWeight: 700, lineHeight: 1.4 }}>{achievement}</div>
+              <div style={{ color: accentColor, fontSize: 42, marginBottom: 14 }}>🏆</div>
+              <div style={{ color: '#2D1B00', fontSize: 22, fontWeight: 700, lineHeight: 1.4 }}>
+                {achievement}
+              </div>
+            </div>
+
+            {/* Bubble pop skill highlights */}
+            <div style={{ marginTop: 24, display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {skillsArray.slice(0, 3).map((skill, i) => (
+                <BubblePop key={i} text={skill} startFrame={S2 + 38 + i * 10} color={[primaryColor, secondaryColor, accentColor][i % 3]} />
+              ))}
             </div>
           </div>
+
         </AbsoluteFill>
       )}
 
-      {/* ===== SCENE 4: Contact CTA ===== */}
-      {currentScene === 3 && (
+      {/* ══════════════════════════════════
+          SCENE 3 — Contact CTA
+      ══════════════════════════════════ */}
+      {scene === 3 && (
         <AbsoluteFill style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
 
+          {/* Subtle bloom */}
           <div style={{
-            position: 'absolute',
-            width: 700,
-            height: 700,
-            borderRadius: '50%',
-            background: `radial-gradient(circle, ${primaryColor}15 0%, transparent 65%)`,
-            transform: `scale(${interpolate(frame % 60, [0, 30, 60], [1, 1.05, 1])})`,
+            position: 'absolute', width: 700, height: 700, borderRadius: '50%',
+            background: `radial-gradient(circle, ${primaryColor}12 0%, transparent 65%)`,
+            transform: `scale(${interpolate(frame % 60, [0, 30, 60], [0.97, 1.04, 0.97])})`,
+            pointerEvents: 'none',
           }} />
 
           {/* Avatar small */}
           <div style={{
-            width: 90,
-            height: 90,
-            borderRadius: '50%',
+            width: 90, height: 90, borderRadius: '50%',
             background: `conic-gradient(from ${gradientAngle}deg, ${primaryColor}, ${accentColor}, ${primaryColor})`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            opacity: fadeIn(S3, S3 + 15),
-            transform: `scale(${scaleIn(S3, 0.5)})`,
-            marginBottom: 28,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: fadeIn(S3, S3 + 14),
+            transform: `scale(${scaleSpring(S3, 0.4)})`,
+            marginBottom: 24,
+            boxShadow: `0 8px 30px ${primaryColor}33`,
           }}>
-            <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#0A0A14', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34 }}>
-              👤
-            </div>
+            <div style={{
+              width: 78, height: 78, borderRadius: '50%',
+              background: '#E8D5C4',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 34,
+            }}>👤</div>
           </div>
 
-          <div style={{
-            fontSize: 88,
-            fontWeight: 900,
-            color: '#FFFFFF',
-            opacity: fadeIn(S3 + 8, S3 + 24),
-            transform: `translateY(${slideUp(S3 + 8, 40)}px)`,
-            textAlign: 'center',
-            letterSpacing: '-3px',
-            lineHeight: 1,
-            marginBottom: 12,
-          }}>
-            {fullName}
-          </div>
+          {/* Name split again */}
+          <NameSplitReveal name={fullName} startFrame={S3 + 6} fontSize={88} />
 
           <div style={{
-            color: toneColor,
-            fontSize: 22,
-            fontWeight: 400,
-            opacity: fadeIn(S3 + 16, S3 + 30),
-            marginBottom: 12,
+            fontSize: 22, fontWeight: 400, color: toneColor,
+            opacity: fadeIn(S3 + 14, S3 + 26),
+            marginTop: 12, marginBottom: 8,
           }}>
             {title}
           </div>
 
           <div style={{
-            color: '#555',
-            fontSize: 18,
-            opacity: fadeIn(S3 + 22, S3 + 36),
-            marginBottom: 48,
+            color: '#8B6A54', fontSize: 16,
+            opacity: fadeIn(S3 + 20, S3 + 32),
+            marginBottom: 44,
           }}>
             {portfolioUrl}
           </div>
 
+          {/* Parallax fade CTA buttons */}
           <div style={{
-            display: 'flex',
-            gap: 20,
-            opacity: fadeIn(S3 + 30, S3 + 46),
-            transform: `translateY(${slideUp(S3 + 30, 25)}px)`,
+            display: 'flex', gap: 18,
+            opacity: fadeIn(S3 + 28, S3 + 42),
+            transform: `translateY(${slideUp(S3 + 28, 25)}px)`,
           }}>
             <div style={{
               background: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-              borderRadius: 60,
-              padding: '20px 60px',
-              color: '#FFFFFF',
-              fontSize: 20,
-              fontWeight: 800,
-              boxShadow: `0 0 50px ${primaryColor}44`,
+              borderRadius: 60, padding: '18px 56px',
+              color: '#FFFFFF', fontSize: 20, fontWeight: 800,
+              boxShadow: `0 8px 30px ${primaryColor}44`,
             }}>
               Hire Me →
             </div>
             <div style={{
-              background: 'transparent',
-              border: `2px solid ${primaryColor}55`,
-              borderRadius: 60,
-              padding: '20px 40px',
-              color: '#FFFFFF',
-              fontSize: 20,
-              fontWeight: 600,
+              background: '#FFFFFF',
+              border: `2px solid ${primaryColor}44`,
+              borderRadius: 60, padding: '18px 36px',
+              color: '#2D1B00', fontSize: 18, fontWeight: 600,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.1)',
             }}>
               {contact}
             </div>
           </div>
+
         </AbsoluteFill>
       )}
 
-      {/* Scene flash transitions */}
+      {/* Scene flash transitions — warm white */}
       {[S1, S2, S3].map((t, i) => (
         <AbsoluteFill key={i} style={{
-          background: '#000000',
-          opacity: interpolate(frame, [t - 4, t, t + 10], [0, 0.88, 0], { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' }),
+          background: '#F5EDE0',
+          opacity: flashOpacity(t),
           pointerEvents: 'none',
+          zIndex: 50,
         }} />
       ))}
 
