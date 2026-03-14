@@ -140,10 +140,67 @@ export default function Canvas({
       // append index.html and composition hash
       const iframeSrc = `${serveUrl}/index.html#${compositionId}`
 
+      const handleIframeLoad = (e) => {
+        try {
+          const iframeDoc = e.target.contentDocument || e.target.contentWindow?.document
+          if (!iframeDoc) return
+
+          // Inject CSS to hide all Remotion Studio UI
+          // and show only the composition canvas
+          const style = iframeDoc.createElement('style')
+          style.textContent = `
+            /* Hide all Remotion Studio panels and UI */
+            [class*="SplitterContainer"],
+            [class*="LeftPanel"],
+            [class*="RightPanel"],
+            [class*="TopPanel"],
+            [class*="BottomPanel"],
+            [class*="Timeline"],
+            [class*="timeline"],
+            [class*="Toolbar"],
+            [class*="toolbar"],
+            [class*="Header"],
+            [class*="Sidebar"],
+            [class*="sidebar"],
+            [class*="DraggerContainer"],
+            [class*="MenuToolbar"],
+            [class*="ExportButton"],
+            [class*="PlaybackControls"],
+            [class*="controls"],
+            [class*="splitter"],
+            [class*="ResizeHandle"],
+            [class*="AssetPanel"],
+            [class*="PropertyPanel"],
+            [data-remotion-studio="true"] > *:not([class*="Canvas"]):not([class*="canvas"]):not([class*="Preview"]):not([class*="preview"]) {
+              display: none !important;
+            }
+
+            /* Make the canvas fill the entire iframe */
+            body, html, #remotion-canvas, #canvas,
+            [class*="Canvas"], [class*="canvas"],
+            [class*="Preview"], [class*="preview"] {
+              width: 100% !important;
+              height: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              overflow: hidden !important;
+              background: #000 !important;
+            }
+
+            /* Hide scrollbars */
+            ::-webkit-scrollbar { display: none !important; }
+          `
+          iframeDoc.head.appendChild(style)
+        } catch (err) {
+          // Cross origin errors — ignore
+        }
+      }
+
       return (
         <iframe
           key={`${compositionId}-${JSON.stringify(allProps)}`}
           src={iframeSrc}
+          onLoad={handleIframeLoad}
           style={{
             width: '100%',
             height: '100%',
