@@ -5,6 +5,7 @@ const path = require('path')
 require('./ipc/ffmpeg')
 require('./ipc/project')
 require('./ipc/templates')
+require('./ipc/bundle')
 
 const { getBuiltInPreviewPaths } = require('./ipc/previewGenerator')
 

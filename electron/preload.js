@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('electron', {
   listTemplates: () => ipcRenderer.invoke('template:list'),
   deleteTemplate: (templateId) => ipcRenderer.invoke('template:delete', templateId),
   updateTemplate: (templateId, updates) => ipcRenderer.invoke('template:update', { templateId, updates }),
+  bundleTemplate: (folderPath) => ipcRenderer.invoke('template:bundle', { folderPath }),
 
   // Previews
   getBuiltInPreviewPaths: () => ipcRenderer.invoke('preview:getBuiltInPaths'),
