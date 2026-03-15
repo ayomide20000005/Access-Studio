@@ -20,23 +20,18 @@ export default function Canvas({
   const safeDuration = isFinite(rawDuration) && rawDuration >= 1 ? rawDuration : 10
   const durationInFrames = Math.max(1, Math.round(safeDuration * FPS))
 
-  // Custom template bundle state
   const [serveUrl, setServeUrl] = useState(null)
   const [bundling, setBundling] = useState(false)
   const [bundleError, setBundleError] = useState(null)
-
-  // Track which folderPath we already bundled so we don't re-bundle on every input change
   const bundledFolderRef = useRef(null)
 
   useEffect(() => {
-    // Only run for custom templates
     if (!template?.isCustom || !template?.folderPath) {
       setServeUrl(null)
       setBundleError(null)
       return
     }
 
-    // Already bundled this template this session — skip
     if (bundledFolderRef.current === template.folderPath && serveUrl) return
 
     const run = async () => {
@@ -60,21 +55,13 @@ export default function Canvas({
     run()
   }, [template?.folderPath, template?.isCustom])
 
-  // For built-in templates — same inputProps as before
   const builtInInputProps = {
     templateId: template?.id || '',
     inputs: inputs || {},
     selectedStyles: selectedStyles || {},
   }
 
-  // For custom templates — pass all inputs and selectedStyles directly as props
-  const customInputProps = {
-    ...(inputs || {}),
-    ...(selectedStyles || {}),
-  }
-
   const renderPlayer = () => {
-    // No template selected
     if (!template) {
       return (
         <div
@@ -87,7 +74,6 @@ export default function Canvas({
       )
     }
 
-    // Custom template — bundling in progress
     if (template.isCustom && bundling) {
       return (
         <div
@@ -106,7 +92,6 @@ export default function Canvas({
       )
     }
 
-    // Custom template — bundle failed
     if (template.isCustom && bundleError) {
       return (
         <div
@@ -115,10 +100,7 @@ export default function Canvas({
         >
           <span className="text-4xl">⚠️</span>
           <p className="text-sm font-semibold" style={{ color: '#DC2626' }}>Preview failed</p>
-          <p
-            className="text-xs text-center px-8"
-            style={{ color: 'var(--muted)', maxWidth: 340 }}
-          >
+          <p className="text-xs text-center px-8" style={{ color: 'var(--muted)', maxWidth: 340 }}>
             {bundleError}
           </p>
           <p className="text-xs text-center px-8" style={{ color: 'var(--muted)', maxWidth: 340 }}>
@@ -128,79 +110,14 @@ export default function Canvas({
       )
     }
 
-    // Custom template — ready with serveUrl — show in iframe
     if (template.isCustom && serveUrl) {
       const compositionId = template?.composition || 'MainComposition'
-      const allProps = {
-        ...(inputs || {}),
-        ...(selectedStyles || {}),
-      }
-
-      // serveUrl is now http://127.0.0.1:PORT
-      // append index.html and composition hash
-      const iframeSrc = `${serveUrl}/index.html#${compositionId}`
-
-      const handleIframeLoad = (e) => {
-        try {
-          const iframeDoc = e.target.contentDocument || e.target.contentWindow?.document
-          if (!iframeDoc) return
-
-          // Inject CSS to hide all Remotion Studio UI
-          // and show only the composition canvas
-          const style = iframeDoc.createElement('style')
-          style.textContent = `
-            /* Hide all Remotion Studio panels and UI */
-            [class*="SplitterContainer"],
-            [class*="LeftPanel"],
-            [class*="RightPanel"],
-            [class*="TopPanel"],
-            [class*="BottomPanel"],
-            [class*="Timeline"],
-            [class*="timeline"],
-            [class*="Toolbar"],
-            [class*="toolbar"],
-            [class*="Header"],
-            [class*="Sidebar"],
-            [class*="sidebar"],
-            [class*="DraggerContainer"],
-            [class*="MenuToolbar"],
-            [class*="ExportButton"],
-            [class*="PlaybackControls"],
-            [class*="controls"],
-            [class*="splitter"],
-            [class*="ResizeHandle"],
-            [class*="AssetPanel"],
-            [class*="PropertyPanel"],
-            [data-remotion-studio="true"] > *:not([class*="Canvas"]):not([class*="canvas"]):not([class*="Preview"]):not([class*="preview"]) {
-              display: none !important;
-            }
-
-            /* Make the canvas fill the entire iframe */
-            body, html, #remotion-canvas, #canvas,
-            [class*="Canvas"], [class*="canvas"],
-            [class*="Preview"], [class*="preview"] {
-              width: 100% !important;
-              height: 100% !important;
-              margin: 0 !important;
-              padding: 0 !important;
-              overflow: hidden !important;
-              background: #000 !important;
-            }
-
-            /* Hide scrollbars */
-            ::-webkit-scrollbar { display: none !important; }
-          `
-          iframeDoc.head.appendChild(style)
-        } catch (err) {
-          // Cross origin errors — ignore
-        }
-      }
+      const iframeSrc = `${serveUrl}/#${compositionId}`
 
       return (
         <iframe
-          key={`${compositionId}-${JSON.stringify(allProps)}`}
+          key={iframeSrc}
           src={iframeSrc}
-          onLoad={handleIframeLoad}
           style={{
             width: '100%',
             height: '100%',
@@ -212,7 +129,6 @@ export default function Canvas({
       )
     }
 
-    // Built-in template
     return (
       <Player
         component={MainComposition}
@@ -234,7 +150,6 @@ export default function Canvas({
       className="flex-1 flex flex-col overflow-hidden"
       style={{ background: 'var(--bg)' }}
     >
-      {/* Canvas area */}
       <div
         className="flex-1 flex items-center justify-center"
         style={{ background: 'var(--bg)', padding: '32px 48px' }}
@@ -253,7 +168,6 @@ export default function Canvas({
         </div>
       </div>
 
-      {/* Timeline strip */}
       {showTimeline && (
         <div
           className="h-16 flex items-center px-6 gap-4 shrink-0"
