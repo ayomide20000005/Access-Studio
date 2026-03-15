@@ -1,3 +1,5 @@
+// PATH: vite.config.js
+
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
@@ -20,5 +22,11 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    fs: {
+      // Allow importing files from anywhere on the filesystem
+      // This is needed for dynamic import of custom template Composition.jsx
+      allow: ['..', '/'],
+      strict: false,
+    },
   },
 })

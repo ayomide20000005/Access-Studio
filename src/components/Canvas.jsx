@@ -20,45 +20,63 @@ export default function Canvas({
   const safeDuration = isFinite(rawDuration) && rawDuration >= 1 ? rawDuration : 10
   const durationInFrames = Math.max(1, Math.round(safeDuration * FPS))
 
-  const [serveUrl, setServeUrl] = useState(null)
-  const [bundling, setBundling] = useState(false)
-  const [bundleError, setBundleError] = useState(null)
-  const bundledFolderRef = useRef(null)
+  // Custom template component state
+  const [customComponent, setCustomComponent] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(null)
+  const loadedFolderRef = useRef(null)
 
   useEffect(() => {
     if (!template?.isCustom || !template?.folderPath) {
-      setServeUrl(null)
-      setBundleError(null)
+      setCustomComponent(null)
+      setLoadError(null)
       return
     }
 
-    if (bundledFolderRef.current === template.folderPath && serveUrl) return
+    // Already loaded this template — skip
+    if (loadedFolderRef.current === template.folderPath && customComponent) return
 
     const run = async () => {
-      setBundling(true)
-      setBundleError(null)
+      setLoading(true)
+      setLoadError(null)
       try {
-        const result = await window.electron.bundleTemplate(template.folderPath)
-        if (result.success) {
-          setServeUrl(result.serveUrl)
-          bundledFolderRef.current = template.folderPath
-        } else {
-          setBundleError(result.error)
+        // Dynamically import Composition.jsx from the template folder
+        // vite.config.js fs.allow lets Vite serve files from anywhere
+        const compositionPath = template.folderPath.replace(/\\/g, '/') + '/Composition.jsx'
+        const module = await import(/* @vite-ignore */ `/@fs/${compositionPath}`)
+
+        // Find the exported component
+        const component = Object.values(module).find(
+          (exp) => typeof exp === 'function'
+        )
+
+        if (!component) {
+          throw new Error('No valid component found in Composition.jsx')
         }
+
+        setCustomComponent(() => component)
+        loadedFolderRef.current = template.folderPath
       } catch (err) {
-        setBundleError(err.message)
+        setLoadError(err.message)
       } finally {
-        setBundling(false)
+        setLoading(false)
       }
     }
 
     run()
   }, [template?.folderPath, template?.isCustom])
 
+  // For built-in templates
   const builtInInputProps = {
     templateId: template?.id || '',
     inputs: inputs || {},
     selectedStyles: selectedStyles || {},
+  }
+
+  // For custom templates — pass all inputs and selectedStyles directly as props
+  const customInputProps = {
+    ...(inputs || {}),
+    ...(selectedStyles || {}),
   }
 
   const renderPlayer = () => {
@@ -74,7 +92,7 @@ export default function Canvas({
       )
     }
 
-    if (template.isCustom && bundling) {
+    if (template.isCustom && loading) {
       return (
         <div
           className="w-full h-full flex flex-col items-center justify-center gap-4"
@@ -84,15 +102,12 @@ export default function Canvas({
             className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: 'var(--primary)', borderTopColor: 'transparent' }}
           />
-          <p className="text-sm">Preparing preview...</p>
-          <p className="text-xs" style={{ color: 'var(--muted)', maxWidth: 260, textAlign: 'center' }}>
-            This only happens once per template. Updates will be instant after this.
-          </p>
+          <p className="text-sm">Loading template...</p>
         </div>
       )
     }
 
-    if (template.isCustom && bundleError) {
+    if (template.isCustom && loadError) {
       return (
         <div
           className="w-full h-full flex flex-col items-center justify-center gap-3"
@@ -101,35 +116,33 @@ export default function Canvas({
           <span className="text-4xl">⚠️</span>
           <p className="text-sm font-semibold" style={{ color: '#DC2626' }}>Preview failed</p>
           <p className="text-xs text-center px-8" style={{ color: 'var(--muted)', maxWidth: 340 }}>
-            {bundleError}
-          </p>
-          <p className="text-xs text-center px-8" style={{ color: 'var(--muted)', maxWidth: 340 }}>
-            Make sure your template has a valid index.js and Root.jsx and that the composition id in Root.jsx matches the "composition" value in template.config.json.
+            {loadError}
           </p>
         </div>
       )
     }
 
-    if (template.isCustom && serveUrl) {
-      const compositionId = template?.composition || 'MainComposition'
-      // Point to root with composition hash — server serves clean index.html
-      const iframeSrc = `${serveUrl}/#${compositionId}`
-
+    // Custom template — use Player with directly imported component
+    // No bundling, no iframe, no Studio shell
+    if (template.isCustom && customComponent) {
       return (
-        <iframe
-          key={iframeSrc}
-          src={iframeSrc}
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            background: '#000',
-          }}
-          title="Custom Template Preview"
+        <Player
+          component={customComponent}
+          inputProps={customInputProps}
+          durationInFrames={durationInFrames}
+          compositionWidth={1920}
+          compositionHeight={1080}
+          fps={FPS}
+          style={{ width: '100%', height: '100%' }}
+          controls
+          autoPlay={false}
+          loop
+          acknowledgeRemotionLicense
         />
       )
     }
 
+    // Built-in template
     return (
       <Player
         component={MainComposition}
@@ -142,6 +155,7 @@ export default function Canvas({
         controls
         autoPlay={false}
         loop
+        acknowledgeRemotionLicense
       />
     )
   }
