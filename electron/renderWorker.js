@@ -1,3 +1,5 @@
+// PATH: electron/renderWorker.js
+
 const { workerData, parentPort } = require('worker_threads')
 const path = require('path')
 const { execFile } = require('child_process')
@@ -37,6 +39,9 @@ function runFFmpeg(args, duration) {
 async function run() {
   const {
     templateId,
+    isCustom,
+    folderPath,
+    compositionId,
     inputs,
     selectedStyles,
     format,
@@ -65,24 +70,45 @@ async function run() {
     // Stage 1 — bundle
     send('progress', { progress: 5, stage: 'Bundling project...' })
 
-    const entryPoint = path.join(projectRoot, 'remotion', 'index.js')
+    // For custom templates — use the template's own index.js as entry point
+    // For built-in templates — use the project's remotion/index.js
+    const entryPoint = isCustom && folderPath
+      ? path.join(folderPath, 'index.js')
+      : path.join(projectRoot, 'remotion', 'index.js')
+
     const bundleLocation = await bundle({
       entryPoint,
-      webpackOverride: (config) => config,
+      webpackOverride: (config) => {
+        config.cache = false
+        return config
+      },
     })
 
     send('progress', { progress: 20, stage: 'Selecting composition...' })
 
-    const props = {
-      templateId,
-      inputs: { ...inputs, fontFamily: 'Inter' },
-      selectedStyles: selectedStyles || {},
-    }
+    // For custom templates — pass inputs directly as props
+    // For built-in templates — wrap in templateId/inputs/selectedStyles
+    const props = isCustom
+      ? {
+          ...(inputs || {}),
+          ...(selectedStyles || {}),
+        }
+      : {
+          templateId,
+          inputs: { ...inputs, fontFamily: 'Inter' },
+          selectedStyles: selectedStyles || {},
+        }
+
+    // For custom templates — use their compositionId
+    // For built-in templates — always use MainComposition
+    const targetCompositionId = isCustom && compositionId
+      ? compositionId
+      : 'MainComposition'
 
     // Stage 2 — select composition
     const composition = await selectComposition({
       serveUrl: bundleLocation,
-      id: 'MainComposition',
+      id: targetCompositionId,
       inputProps: props,
     })
 
@@ -101,7 +127,7 @@ async function run() {
       codec: 'h264',
       outputLocation: tempVideoPath,
       inputProps: props,
-      concurrency: Math.max(1, cpuCount - 1), // use all cores except one
+      concurrency: Math.max(1, cpuCount - 1),
       onProgress: ({ progress }) => {
         const pct = 25 + Math.round(progress * 35)
         send('progress', { progress: pct, stage: `Rendering frames... ${Math.round(progress * 100)}%` })

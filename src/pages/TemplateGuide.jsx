@@ -1,9 +1,11 @@
+// PATH: src/pages/TemplateGuide.jsx
+
 import { useState } from 'react'
 
 const aiPrompt = `You are helping me build a custom video template for Acces Studio — a free, offline, no-code desktop video creation app built with Electron, React, and Remotion.
 
 IMPORTANT: Acces Studio already has these packages installed. Your template must ONLY use these — no npm install needed:
-- remotion (core) — useCurrentFrame, useVideoConfig, interpolate, spring, AbsoluteFill, Sequence, Audio, Video, Img, staticFile
+- remotion (core) — useCurrentFrame, useVideoConfig, interpolate, spring, AbsoluteFill, Sequence, Audio, Video, Img
 - @remotion/transitions — TransitionSeries, linearTiming, springTiming + transitions: fade, slide, wipe, flip, clockWipe, none
 - @remotion/shapes — Triangle, Circle, Rect, Star, Ellipse
 - @remotion/paths — evolvePath, getLength, getPointAtLength
@@ -11,24 +13,25 @@ IMPORTANT: Acces Studio already has these packages installed. Your template must
 - @remotion/captions — Caption component for subtitles
 - @remotion/media-utils — getVideoMetadata, getAudioData
 - react (18) — useState, useEffect, useRef, useMemo, useCallback
-- framer-motion — motion components and animations
-- gsap — GreenSock animation library
-- animejs — anime.js animations
-- d3 — data visualization
+
+NOTE: Do NOT use framer-motion, gsap, animejs, or d3 in your Composition.jsx. These packages cannot be resolved when Acces Studio loads your template directly. Use Remotion's built-in spring() and interpolate() for all animations — they are just as powerful.
 
 FOLDER STRUCTURE (create exactly this):
 my-template/
-  index.js                    ← Remotion entry point
-  Root.jsx                    ← Registers the composition
-  Composition.jsx             ← The actual animation
+  index.js                    ← Needed for export only — NOT used for live preview
+  Root.jsx                    ← Needed for export only — NOT used for live preview
+  Composition.jsx             ← The actual animation — THIS powers the live preview
   template.config.json        ← Fields and styles config
   preview.png                 ← Optional screenshot
-  public/                     ← Optional — put any bundled assets here (images, music, fonts)
-    background.png            ← Example: referenced in code as staticFile('background.png')
-    music.mp3                 ← Example: referenced in code as staticFile('music.mp3')
 
-IMPORTANT ABOUT THE public/ FOLDER:
-If your template uses any fixed assets that are part of the design — background images, music tracks, watermarks, custom font files — place them inside the public/ folder. Remotion's bundler will find them automatically when Acces Studio loads your template. If you do not include the public/ folder, any staticFile() references in your code will fail to load. If your template is purely code-based animations with no bundled assets, you do not need a public/ folder at all.
+HOW ACCES STUDIO WORKS:
+- Live preview: Acces Studio imports your Composition.jsx directly — no bundler, no node_modules needed
+- Export/render: Acces Studio uses index.js and Root.jsx to bundle and render the final video
+- This means Composition.jsx and template.config.json are the ONLY files needed for preview to work
+- Always include index.js and Root.jsx anyway — they are required for export
+
+CRITICAL ABOUT ASSETS:
+Do NOT use staticFile() in your Composition.jsx. Acces Studio loads Composition.jsx directly for preview and staticFile() will not work. Instead, use image, video, and audio field types in template.config.json so users can upload their own assets through the sidebar. The file path is passed directly as a prop to your composition.
 
 index.js MUST look exactly like this:
 \`\`\`javascript
@@ -39,6 +42,7 @@ registerRoot(Root)
 
 Root.jsx MUST look exactly like this:
 \`\`\`jsx
+import React from 'react'
 import { Composition } from 'remotion'
 import { MyComposition } from './Composition'
 
@@ -63,6 +67,9 @@ CRITICAL: The id value in Root.jsx (e.g. "MyComposition") MUST exactly match the
 
 Composition.jsx receives ALL field values as props directly:
 \`\`\`jsx
+import React from 'react'
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, spring } from 'remotion'
+
 export const MyComposition = ({
   title = 'Default Title',
   primaryColor = '#7C3AED',
@@ -122,8 +129,6 @@ Note: transition and caption field types will display as a text input fallback i
 
 ALWAYS include "color" (hex color for the template card) and "icon" (an emoji) in template.config.json at the top level.
 
-IF your template uses any fixed bundled assets (background images, music, fonts that are part of the design), place them in a public/ folder inside the template folder and reference them using staticFile('filename.ext') from Remotion. If your template is purely code-based with no bundled assets, skip the public/ folder entirely.
-
 Now please help me build a complete Acces Studio template. I want a template for:`
 
 const convertPrompt = `You are helping me convert an existing Remotion template to Acces Studio format.
@@ -138,14 +143,16 @@ Acces Studio is a free, offline, no-code desktop video creation app. Here is wha
 6. Only use packages already installed in Acces Studio:
    - remotion (core), @remotion/transitions, @remotion/shapes, @remotion/paths
    - @remotion/google-fonts, @remotion/captions, @remotion/media-utils
-   - react (18), framer-motion, gsap, animejs, d3
+   - react (18)
+   - Do NOT use framer-motion, gsap, animejs, or d3 — these cannot be resolved when Acces Studio loads your template directly. Use Remotion's spring() and interpolate() for all animations instead.
 
 CRITICAL RULES you must follow:
 - The id value in Root.jsx (e.g. id="MyComposition") MUST exactly match the "composition" value in template.config.json. If they do not match, the template will not work in Acces Studio.
 - Composition.jsx must always accept duration and speed as props with defaults (duration = 10, speed = 1). These are always passed automatically by Acces Studio.
 - If your config has a "styles" section (e.g. "styles": { "mood": ["Energetic", "Calm"] }), those style keys are passed as individual props to Composition.jsx. Make sure Composition.jsx accepts them as props with a default value.
 - Always include "color" (a hex color for the template card) and "icon" (an emoji) in template.config.json.
-- If the original template uses staticFile() to reference bundled assets (background images, music, fonts), those asset files must be inside a public/ folder within the template folder. Tell the user to copy the original template's public/ folder into their template folder before importing into Acces Studio. If the original template has no bundled assets, no public/ folder is needed.
+- Always add import React from 'react' at the top of both Root.jsx and Composition.jsx.
+- Do NOT use staticFile() for any assets. Acces Studio loads Composition.jsx directly for preview and staticFile() will not work. If the original template uses staticFile() for images, music or other assets, convert those into image, video, or audio fields in the config instead so the user can upload their own assets through the sidebar. The file path will be passed directly as a prop to the composition.
 
 Output exactly these 4 files:
 - index.js
@@ -274,9 +281,9 @@ export default function TemplateGuide({ onClose }) {
                 </p>
                 <div className="flex flex-col gap-3">
                   {[
-                    { icon: '📁', title: 'Create a folder', desc: 'Your template lives in a folder with 4 required files — index.js, Root.jsx, Composition.jsx, and template.config.json. Optionally add a public/ folder for any bundled assets like background images or music that are part of the template design.' },
+                    { icon: '📁', title: 'Create a folder', desc: 'Your template lives in a folder with 4 required files — index.js, Root.jsx, Composition.jsx, and template.config.json.' },
                     { icon: '⚙️', title: 'Define your fields', desc: 'The config file tells Acces Studio what inputs to show — text, color, image, video, audio, toggle, slider and more.' },
-                    { icon: '🎬', title: 'Write the animation', desc: 'A Remotion composition that uses useCurrentFrame, interpolate, spring and all installed packages to create the animation.' },
+                    { icon: '🎬', title: 'Write the animation', desc: 'Composition.jsx is the heart of your template. Acces Studio loads it directly for live preview — no bundling needed. Use useCurrentFrame, interpolate, spring and all installed packages.' },
                     { icon: '📦', title: 'Import into Acces Studio', desc: 'Drop the folder into Acces Studio via Import Template. Fields appear automatically. No code needed to use it.' },
                     { icon: '🔄', title: 'Convert existing templates', desc: 'Found a Remotion template online? Copy the code, paste into the AI prompt and it converts it to Acces Studio format automatically.' },
                   ].map((item, i) => (
@@ -304,13 +311,10 @@ export default function TemplateGuide({ onClose }) {
                   style={{ background: 'var(--panel)', border: '1px solid var(--border)', color: 'var(--text)', lineHeight: 2 }}
                 >
                   <div>📁 my-template/</div>
-                  <div style={{ paddingLeft: 24 }}>📄 index.js <span style={{ color: 'var(--muted)', fontSize: 11 }}>← registerRoot entry point</span></div>
-                  <div style={{ paddingLeft: 24 }}>📄 Root.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← registers Composition with fps, size, duration</span></div>
-                  <div style={{ paddingLeft: 24 }}>📄 Composition.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← the actual animation logic</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 Composition.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← the actual animation — powers the live preview</span></div>
                   <div style={{ paddingLeft: 24 }}>📄 template.config.json <span style={{ color: 'var(--muted)', fontSize: 11 }}>← fields and styles config</span></div>
-                  <div style={{ paddingLeft: 24 }}>📁 public/ <span style={{ color: 'var(--muted)', fontSize: 11 }}>← optional, for bundled assets (images, music, fonts)</span></div>
-                  <div style={{ paddingLeft: 48 }}>🖼 background.png</div>
-                  <div style={{ paddingLeft: 48 }}>🎵 music.mp3</div>
+                  <div style={{ paddingLeft: 24 }}>📄 index.js <span style={{ color: 'var(--muted)', fontSize: 11 }}>← needed for export only</span></div>
+                  <div style={{ paddingLeft: 24 }}>📄 Root.jsx <span style={{ color: 'var(--muted)', fontSize: 11 }}>← needed for export only</span></div>
                   <div style={{ paddingLeft: 24 }}>🖼 preview.png <span style={{ color: 'var(--muted)', fontSize: 11 }}>← optional preview image</span></div>
                 </div>
                 <div
@@ -319,25 +323,25 @@ export default function TemplateGuide({ onClose }) {
                 >
                   <p className="text-xs font-semibold mb-2" style={{ color: 'var(--primary)' }}>Important</p>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    Do NOT include node_modules, package.json or any dependencies. Acces Studio provides React, Remotion and all installed packages automatically. Your template only needs the 4 core files.
+                    Do NOT include node_modules, package.json or any dependencies. Acces Studio provides React, Remotion and all installed packages automatically.
                   </p>
                 </div>
                 <div
                   className="rounded-xl p-4"
                   style={{ background: '#0891B211', border: '1px solid #0891B233' }}
                 >
-                  <p className="text-xs font-semibold mb-2" style={{ color: '#0891B2' }}>About the public/ folder</p>
+                  <p className="text-xs font-semibold mb-2" style={{ color: '#0891B2' }}>How live preview works</p>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    If your template uses any fixed assets that are part of the design — background images, music tracks, watermarks, custom font files — place them inside a <code style={{ color: '#0891B2' }}>public/</code> folder inside your template folder. Remotion's bundler will find and serve them automatically. Reference them in your code using <code style={{ color: '#0891B2' }}>staticFile('filename.ext')</code> from Remotion. If your template is purely code-based animations with no bundled assets, you do not need a public/ folder at all.
+                    Acces Studio loads your <code style={{ color: '#0891B2' }}>Composition.jsx</code> directly for the live preview — no bundling needed. Only <code style={{ color: '#0891B2' }}>Composition.jsx</code> and <code style={{ color: '#0891B2' }}>template.config.json</code> are required for preview to work. <code style={{ color: '#0891B2' }}>index.js</code> and <code style={{ color: '#0891B2' }}>Root.jsx</code> are only needed when exporting the final video.
                   </p>
                 </div>
                 <div
                   className="rounded-xl p-4"
                   style={{ background: '#DC262611', border: '1px solid #DC262633' }}
                 >
-                  <p className="text-xs font-semibold mb-2" style={{ color: '#DC2626' }}>Converting an existing template?</p>
+                  <p className="text-xs font-semibold mb-2" style={{ color: '#DC2626' }}>Do NOT use staticFile()</p>
                   <p className="text-xs" style={{ color: 'var(--muted)' }}>
-                    If the original Remotion template you are converting has a <code style={{ color: '#DC2626' }}>public/</code> folder, make sure to copy it into your template folder before importing into Acces Studio. Without it, any bundled assets like background images or music will fail to load.
+                    Since Acces Studio loads Composition.jsx directly, <code style={{ color: '#DC2626' }}>staticFile()</code> will not work in the live preview. Instead use <code style={{ color: '#DC2626' }}>image</code>, <code style={{ color: '#DC2626' }}>video</code>, or <code style={{ color: '#DC2626' }}>audio</code> field types in your config so users can upload their own assets through the sidebar. The file path is passed directly as a prop to your composition.
                   </p>
                 </div>
               </div>
@@ -392,9 +396,9 @@ export default function TemplateGuide({ onClose }) {
                   { type: 'color', desc: 'Color picker with hex input', example: 'Primary Color, Background' },
                   { type: 'date', desc: 'Date picker', example: 'Launch Date, Event Date' },
                   { type: 'number', desc: 'Number input with min/max', example: 'Count, Year, Score' },
-                  { type: 'image', desc: 'Image file upload', example: 'Logo, Photo, Banner' },
-                  { type: 'video', desc: 'Video file upload', example: 'Background Video, Footage' },
-                  { type: 'audio', desc: 'Audio file upload', example: 'Background Music, Voiceover' },
+                  { type: 'image', desc: 'Image file upload — path passed as prop to composition', example: 'Logo, Photo, Banner' },
+                  { type: 'video', desc: 'Video file upload — path passed as prop to composition', example: 'Background Video, Footage' },
+                  { type: 'audio', desc: 'Audio file upload — path passed as prop to composition', example: 'Background Music, Voiceover' },
                   { type: 'toggle', desc: 'On/off switch', example: 'Show Subtitle, Enable Animation' },
                   { type: 'slider', desc: 'Range slider with min/max/step', example: 'Opacity, Speed, Size' },
                   { type: 'list', desc: 'Multi item list', example: 'Features, Steps, Team Members' },
@@ -429,7 +433,7 @@ export default function TemplateGuide({ onClose }) {
                   Found a Remotion template online? Convert it to Acces Studio format using AI in 4 steps.
                 </p>
                 {[
-                  { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the entire folder including any public/ folder it contains — this is where bundled assets like background images and music live. Do not just copy the code files.' },
+                  { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder and copy the composition file contents.' },
                   { step: '2', title: 'Copy the descriptive prompt below', desc: 'Click the Copy Descriptive Prompt button below. This tells the AI exactly how to convert the template to Acces Studio format — including the critical rule that the composition id in Root.jsx must match the "composition" value in template.config.json.' },
                   { step: '3', title: 'Paste into any AI', desc: 'Paste the prompt into Claude, ChatGPT or any AI. Then paste the original template code at the end of the prompt.' },
                   { step: '4', title: 'Import into Acces Studio', desc: 'Save the 4 generated files into a folder and import it using the Import Template button. Fields appear automatically.' },

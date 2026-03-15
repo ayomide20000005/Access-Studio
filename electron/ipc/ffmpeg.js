@@ -1,3 +1,5 @@
+// PATH: electron/ipc/ffmpeg.js
+
 const { ipcMain, app } = require('electron')
 const path = require('path')
 const { execFile } = require('child_process')
@@ -41,6 +43,9 @@ const resolutionMap = {
 ipcMain.handle('ffmpeg:render', async (event, options) => {
   const {
     templateId,
+    isCustom,
+    folderPath,
+    compositionId,
     inputs,
     selectedStyles,
     format,
@@ -60,6 +65,9 @@ ipcMain.handle('ffmpeg:render', async (event, options) => {
     const worker = new Worker(path.join(__dirname, '../renderWorker.js'), {
       workerData: {
         templateId,
+        isCustom: isCustom || false,
+        folderPath: folderPath || null,
+        compositionId: compositionId || 'MainComposition',
         inputs,
         selectedStyles,
         format,

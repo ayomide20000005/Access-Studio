@@ -1,3 +1,5 @@
+// PATH: src/hooks/useExport.js
+
 import { useState, useCallback } from 'react'
 
 export const useExport = () => {
@@ -57,8 +59,15 @@ export const useExport = () => {
       setStage('Starting render...')
       setProgress(5)
 
+      // Get template object from project
+      const template = project?.template
+
       const result = await window.electron.renderVideo({
-        templateId: project?.template?.id || 'demo-video',
+        templateId: template?.id || 'demo-video',
+        // Pass folderPath and compositionId for custom templates
+        isCustom: template?.isCustom || false,
+        folderPath: template?.folderPath || null,
+        compositionId: template?.composition || 'MainComposition',
         inputs: project?.inputs || {},
         selectedStyles: project?.selectedStyles || {},
         format,
