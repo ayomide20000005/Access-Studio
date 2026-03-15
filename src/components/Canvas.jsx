@@ -112,6 +112,7 @@ export default function Canvas({
 
     if (template.isCustom && serveUrl) {
       const compositionId = template?.composition || 'MainComposition'
+      // Point to root with composition hash — server serves clean index.html
       const iframeSrc = `${serveUrl}/#${compositionId}`
 
       return (

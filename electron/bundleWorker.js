@@ -18,6 +18,8 @@ async function run() {
 
     const bundleDir = await bundle({
       entryPoint,
+      // Disable caching to prevent ENOENT webpack rename errors on Windows
+      // and ensure clean bundles every time
       webpackOverride: (config) => {
         config.cache = false
         return config
