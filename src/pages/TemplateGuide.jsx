@@ -6,7 +6,15 @@ const aiPrompt = `You are helping me build a custom video template for Acces Stu
 
 IMPORTANT: Acces Studio already has these packages installed. Your template must ONLY use these — no npm install needed:
 - remotion (core) — useCurrentFrame, useVideoConfig, interpolate, spring, AbsoluteFill, Sequence, Audio, Video, Img
-- @remotion/transitions — TransitionSeries, linearTiming, springTiming + transitions: fade, slide, wipe, flip, clockWipe, none
+- @remotion/transitions — TransitionSeries, linearTiming, springTiming. CRITICAL: import transition effects from their own subpaths like this:
+  import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions'
+  import { fade } from '@remotion/transitions/fade'
+  import { slide } from '@remotion/transitions/slide'
+  import { wipe } from '@remotion/transitions/wipe'
+  import { flip } from '@remotion/transitions/flip'
+  import { clockWipe } from '@remotion/transitions/clock-wipe'
+  import { none } from '@remotion/transitions/none'
+  NEVER import fade, slide, wipe, flip, clockWipe, none directly from '@remotion/transitions' — it will break.
 - @remotion/shapes — Triangle, Circle, Rect, Star, Ellipse
 - @remotion/paths — evolvePath, getLength, getPointAtLength
 - @remotion/google-fonts — loadFont
@@ -141,7 +149,15 @@ Acces Studio is a free, offline, no-code desktop video creation app. Here is wha
 4. Rewrite Composition.jsx to receive all those values as props instead of hardcoding them
 5. Create a proper index.js and Root.jsx following the exact Acces Studio format
 6. Only use packages already installed in Acces Studio:
-   - remotion (core), @remotion/transitions, @remotion/shapes, @remotion/paths
+   - remotion (core), @remotion/shapes, @remotion/paths
+   - @remotion/transitions — CRITICAL import syntax: always import transition effects from subpaths:
+     import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions'
+     import { fade } from '@remotion/transitions/fade'
+     import { slide } from '@remotion/transitions/slide'
+     import { wipe } from '@remotion/transitions/wipe'
+     import { flip } from '@remotion/transitions/flip'
+     import { clockWipe } from '@remotion/transitions/clock-wipe'
+     NEVER do: import { fade, slide } from '@remotion/transitions' — this will break in Acces Studio.
    - @remotion/google-fonts, @remotion/captions, @remotion/media-utils
    - react (18)
    - Do NOT use framer-motion, gsap, animejs, or d3 — these cannot be resolved when Acces Studio loads your template directly. Use Remotion's spring() and interpolate() for all animations instead.
