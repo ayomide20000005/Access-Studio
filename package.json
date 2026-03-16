@@ -52,7 +52,8 @@
     "appId": "com.acces.studio",
     "productName": "Acces Studio",
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "build/icon.ico"
     },
     "asarUnpack": [
       "node_modules/ffmpeg-static/**",
