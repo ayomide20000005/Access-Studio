@@ -1,3 +1,5 @@
+// PATH: electron/main.js
+
 const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron')
 const path = require('path')
 
@@ -40,7 +42,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      webSecurity: false, // allows renderer to load local file:// bundle paths
+      webSecurity: false,
     },
   })
 
@@ -49,7 +51,9 @@ function createWindow() {
       mainWindow.loadURL('http://localhost:5173')
     }, 3000)
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'))
+    // Use app.getAppPath() to correctly resolve dist/index.html
+    // in both packaged and unpacked builds
+    mainWindow.loadFile(path.join(app.getAppPath(), 'dist/index.html'))
   }
 
   mainWindow.once('ready-to-show', () => {

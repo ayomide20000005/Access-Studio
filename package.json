@@ -2,7 +2,7 @@
   "name": "acces-studio",
   "version": "1.0.0",
   "description": "Free offline no-code desktop video creation studio",
-  "author": "Shuaib Alameen",
+  "author": "Your Name",
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"electron .\"",
@@ -52,6 +52,7 @@
   "build": {
     "appId": "com.acces.studio",
     "productName": "Acces Studio",
+    "asar": false,
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"
