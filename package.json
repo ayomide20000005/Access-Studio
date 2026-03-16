@@ -53,6 +53,15 @@
     "appId": "com.acces.studio",
     "productName": "Acces Studio",
     "asar": false,
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "remotion/**/*",
+      "src/utils/**/*",
+      "src/remotion/**/*",
+      "src/templates/**/*",
+      "package.json"
+    ],
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico"

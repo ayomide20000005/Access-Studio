@@ -6,6 +6,9 @@ import { MainComposition } from '../remotion/compositions/MainComposition'
 
 const FPS = 30
 
+// Check if running in Electron packaged app or Vite dev server
+const isDev = typeof window !== 'undefined' && window.location.protocol === 'http:'
+
 export default function Canvas({
   template,
   inputs,
@@ -40,10 +43,15 @@ export default function Canvas({
       setLoading(true)
       setLoadError(null)
       try {
-        // Dynamically import Composition.jsx from the template folder
-        // vite.config.js fs.allow lets Vite serve files from anywhere
         const compositionPath = template.folderPath.replace(/\\/g, '/') + '/Composition.jsx'
-        const module = await import(/* @vite-ignore */ `/@fs/${compositionPath}`)
+
+        // In dev mode — use Vite's /@fs/ prefix
+        // In production — use file:// URL directly
+        const importPath = isDev
+          ? `/@fs/${compositionPath}`
+          : `file:///${compositionPath}`
+
+        const module = await import(/* @vite-ignore */ importPath)
 
         // Find the exported component
         const component = Object.values(module).find(
@@ -123,7 +131,6 @@ export default function Canvas({
     }
 
     // Custom template — use Player with directly imported component
-    // No bundling, no iframe, no Studio shell
     if (template.isCustom && customComponent) {
       return (
         <Player
