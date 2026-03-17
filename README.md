@@ -31,4 +31,26 @@ Fill in your details in the sidebar — title, colors, images, text
 Watch the live preview update as you type
 Click Export, choose your format and resolution, and save your video
 
-![Import Template](https://github.com/user-attachments/assets/f45134d8-4f4e-4240-85bc-5ef6432f8ab7)
+
+Custom Templates
+Acces Studio supports custom templates. To use one, click Import Template, select the template folder and the fields appear automatically in the sidebar.
+Build Your Own Template
+Acces Studio has a built-in AI prompt you can copy and send to any AI — Claude, ChatGPT or any other. The AI will generate a complete ready-to-import template for you instantly.
+You can also use the Convert Template prompt to turn any existing Remotion template into Acces Studio format automatically. Open the app, click Build a Template and copy the prompt.
+
+Tech Stack
+
+Electron — desktop app shell
+React — user interface
+Vite — frontend build tool
+Remotion — video rendering engine
+FFmpeg — video encoding and export
+Node.js — backend and file system operations
+Tailwind CSS — styling
+Worker Threads — non-blocking render pipeline
+
+![Build](https://github.com/user-attachments/assets/dfd4026f-41ba-4612-866f-a7af27d3b81e)
+
+
+
+![Import Template](https://github.com/user-attachments/assets/f45134d8-4f4e-4240-85bc-5ef6432f8ab
