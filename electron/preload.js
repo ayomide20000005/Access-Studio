@@ -1,3 +1,5 @@
+// PATH: electron/preload.js
+
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('electron', {
@@ -32,6 +34,9 @@ contextBridge.exposeInMainWorld('electron', {
   deleteTemplate: (templateId) => ipcRenderer.invoke('template:delete', templateId),
   updateTemplate: (templateId, updates) => ipcRenderer.invoke('template:update', { templateId, updates }),
   bundleTemplate: (folderPath) => ipcRenderer.invoke('template:bundle', { folderPath }),
+
+  // Read template file content — used for loading Composition.jsx in production
+  readTemplateFile: (filePath) => ipcRenderer.invoke('template:readFile', filePath),
 
   // Previews
   getBuiltInPreviewPaths: () => ipcRenderer.invoke('preview:getBuiltInPaths'),

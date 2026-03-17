@@ -2,6 +2,7 @@
 
 const { app, BrowserWindow, ipcMain, dialog, protocol } = require('electron')
 const path = require('path')
+const fs = require('fs-extra')
 
 // Load IPC handlers
 require('./ipc/ffmpeg')
@@ -10,15 +11,18 @@ require('./ipc/templates')
 require('./ipc/bundle')
 
 // Register file protocol before app is ready
-// This allows the renderer to load local file:// URLs for custom template bundles
 app.on('ready', () => {
   protocol.registerFileProtocol('file', (request, callback) => {
     let filePath = decodeURIComponent(request.url.replace('file:///', ''))
-    // Fix Windows paths — restore drive letter colon
     if (process.platform === 'win32' && !filePath.startsWith('\\\\')) {
       filePath = filePath.replace(/^([a-zA-Z])\//, '$1:/')
     }
-    callback({ path: filePath })
+    const ext = path.extname(filePath).toLowerCase()
+    if (ext === '.jsx' || ext === '.js' || ext === '.mjs') {
+      callback({ path: filePath, mimeType: 'text/javascript' })
+    } else {
+      callback({ path: filePath })
+    }
   })
 })
 
@@ -51,8 +55,6 @@ function createWindow() {
       mainWindow.loadURL('http://localhost:5173')
     }, 3000)
   } else {
-    // Use app.getAppPath() to correctly resolve dist/index.html
-    // in both packaged and unpacked builds
     mainWindow.loadFile(path.join(app.getAppPath(), 'dist/index.html'))
   }
 
@@ -68,7 +70,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow()
-
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -113,4 +114,15 @@ ipcMain.handle('app:close', () => mainWindow.close())
 // Preview IPC handler
 ipcMain.handle('preview:getBuiltInPaths', async () => {
   return await getBuiltInPreviewPaths()
+})
+
+// Read template Composition.jsx file content
+// Used by Canvas.jsx in production to load custom templates via blob URL
+ipcMain.handle('template:readFile', async (_, filePath) => {
+  try {
+    const content = await fs.readFile(filePath, 'utf8')
+    return { success: true, content }
+  } catch (err) {
+    return { success: false, error: err.message }
+  }
 })

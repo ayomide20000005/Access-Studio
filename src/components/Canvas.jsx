@@ -6,7 +6,6 @@ import { MainComposition } from '../remotion/compositions/MainComposition'
 
 const FPS = 30
 
-// Check if running in Electron packaged app or Vite dev server
 const isDev = typeof window !== 'undefined' && window.location.protocol === 'http:'
 
 export default function Canvas({
@@ -23,11 +22,11 @@ export default function Canvas({
   const safeDuration = isFinite(rawDuration) && rawDuration >= 1 ? rawDuration : 10
   const durationInFrames = Math.max(1, Math.round(safeDuration * FPS))
 
-  // Custom template component state
   const [customComponent, setCustomComponent] = useState(null)
   const [loading, setLoading] = useState(false)
   const [loadError, setLoadError] = useState(null)
   const loadedFolderRef = useRef(null)
+  const blobUrlRef = useRef(null)
 
   useEffect(() => {
     if (!template?.isCustom || !template?.folderPath) {
@@ -36,22 +35,40 @@ export default function Canvas({
       return
     }
 
-    // Already loaded this template — skip
     if (loadedFolderRef.current === template.folderPath && customComponent) return
 
     const run = async () => {
       setLoading(true)
       setLoadError(null)
       try {
-        const compositionPath = template.folderPath.replace(/\\/g, '/') + '/Composition.jsx'
+        let module
 
-        // In dev mode — use Vite's /@fs/ prefix
-        // In production — use file:// URL directly
-        const importPath = isDev
-          ? `/@fs/${compositionPath}`
-          : `file:///${compositionPath}`
+        if (isDev) {
+          // Dev mode — use Vite's /@fs/ prefix directly
+          const compositionPath = template.folderPath.replace(/\\/g, '/') + '/Composition.jsx'
+          module = await import(/* @vite-ignore */ `/@fs/${compositionPath}`)
+        } else {
+          // Production — read file via IPC then create a blob URL
+          // This bypasses the file:// dynamic import restriction in packaged Electron
+          const compositionPath = template.folderPath + '\\Composition.jsx'
+          const result = await window.electron.readTemplateFile(compositionPath)
 
-        const module = await import(/* @vite-ignore */ importPath)
+          if (!result.success) {
+            throw new Error(result.error || 'Failed to read Composition.jsx')
+          }
+
+          // Revoke previous blob URL to avoid memory leaks
+          if (blobUrlRef.current) {
+            URL.revokeObjectURL(blobUrlRef.current)
+          }
+
+          // Create blob URL with correct MIME type so browser can import it
+          const blob = new Blob([result.content], { type: 'text/javascript' })
+          const blobUrl = URL.createObjectURL(blob)
+          blobUrlRef.current = blobUrl
+
+          module = await import(/* @vite-ignore */ blobUrl)
+        }
 
         // Find the exported component
         const component = Object.values(module).find(
@@ -74,14 +91,12 @@ export default function Canvas({
     run()
   }, [template?.folderPath, template?.isCustom])
 
-  // For built-in templates
   const builtInInputProps = {
     templateId: template?.id || '',
     inputs: inputs || {},
     selectedStyles: selectedStyles || {},
   }
 
-  // For custom templates — pass all inputs and selectedStyles directly as props
   const customInputProps = {
     ...(inputs || {}),
     ...(selectedStyles || {}),
@@ -130,7 +145,6 @@ export default function Canvas({
       )
     }
 
-    // Custom template — use Player with directly imported component
     if (template.isCustom && customComponent) {
       return (
         <Player
@@ -149,7 +163,6 @@ export default function Canvas({
       )
     }
 
-    // Built-in template
     return (
       <Player
         component={MainComposition}
