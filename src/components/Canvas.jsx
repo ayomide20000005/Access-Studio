@@ -48,26 +48,11 @@ export default function Canvas({
           const compositionPath = template.folderPath.replace(/\\/g, '/') + '/Composition.jsx'
           module = await import(/* @vite-ignore */ `/@fs/${compositionPath}`)
         } else {
-          // Production — read file via IPC then create a blob URL
-          // This bypasses the file:// dynamic import restriction in packaged Electron
-          const compositionPath = template.folderPath + '\\Composition.jsx'
-          const result = await window.electron.readTemplateFile(compositionPath)
-
-          if (!result.success) {
-            throw new Error(result.error || 'Failed to read Composition.jsx')
-          }
-
-          // Revoke previous blob URL to avoid memory leaks
-          if (blobUrlRef.current) {
-            URL.revokeObjectURL(blobUrlRef.current)
-          }
-
-          // Create blob URL with correct MIME type so browser can import it
-          const blob = new Blob([result.content], { type: 'text/javascript' })
-          const blobUrl = URL.createObjectURL(blob)
-          blobUrlRef.current = blobUrl
-
-          module = await import(/* @vite-ignore */ blobUrl)
+          // Production — use custom template:// protocol registered in main.js
+          // This serves the file as a proper JS module with correct MIME type
+          const compositionPath = template.folderPath.replace(/\\/g, '/')
+          const templateUrl = `template:///${compositionPath}/Composition.jsx`
+          module = await import(/* @vite-ignore */ templateUrl)
         }
 
         // Find the exported component

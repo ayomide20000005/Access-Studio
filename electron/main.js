@@ -10,8 +10,23 @@ require('./ipc/project')
 require('./ipc/templates')
 require('./ipc/bundle')
 
-// Register file protocol before app is ready
+// Register custom protocol for loading template files as ES modules
+// This allows Canvas.jsx to import Composition.jsx from AppData
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'template',
+    privileges: {
+      secure: true,
+      standard: true,
+      supportFetchAPI: true,
+      allowServiceWorkers: true,
+      corsEnabled: true,
+    },
+  },
+])
+
 app.on('ready', () => {
+  // Register file protocol for general file access
   protocol.registerFileProtocol('file', (request, callback) => {
     let filePath = decodeURIComponent(request.url.replace('file:///', ''))
     if (process.platform === 'win32' && !filePath.startsWith('\\\\')) {
@@ -22,6 +37,24 @@ app.on('ready', () => {
       callback({ path: filePath, mimeType: 'text/javascript' })
     } else {
       callback({ path: filePath })
+    }
+  })
+
+  // Register template:// protocol to serve template files as JS modules
+  // Usage: import('template:///C:/Users/.../Composition.jsx')
+  protocol.registerBufferProtocol('template', (request, callback) => {
+    try {
+      let filePath = decodeURIComponent(request.url.replace('template:///', ''))
+      if (process.platform === 'win32') {
+        filePath = filePath.replace(/^([a-zA-Z])\//, '$1:/')
+      }
+      const content = require('fs').readFileSync(filePath)
+      callback({
+        mimeType: 'text/javascript',
+        data: content,
+      })
+    } catch (err) {
+      callback({ error: -2 })
     }
   })
 })
@@ -111,13 +144,10 @@ ipcMain.handle('app:maximize', () => {
 })
 ipcMain.handle('app:close', () => mainWindow.close())
 
-// Preview IPC handler
 ipcMain.handle('preview:getBuiltInPaths', async () => {
   return await getBuiltInPreviewPaths()
 })
 
-// Read template Composition.jsx file content
-// Used by Canvas.jsx in production to load custom templates via blob URL
 ipcMain.handle('template:readFile', async (_, filePath) => {
   try {
     const content = await fs.readFile(filePath, 'utf8')
