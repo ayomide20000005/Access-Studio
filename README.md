@@ -11,6 +11,10 @@ Download the latest version for Windows here:
 https://github.com/ayomide20000005/acces-studio/releases/latest
 Mac and Linux support coming soon.
 
+
+![Build](https://github.com/user-attachments/assets/02fddc05-fdd8-48b7-be00-efa3c59023a7)
+
+
 Features
 
 10 built-in professional video templates covering product launches, social media, tutorials, events, pitch decks and more
@@ -32,6 +36,8 @@ Watch the live preview update as you type
 Click Export, choose your format and resolution, and save your video
 
 
+![github](https://github.com/user-attachments/assets/3a1b5bc3-797f-405b-b7bb-81da7758f8ed)
+
 Custom Templates
 Acces Studio supports custom templates. To use one, click Import Template, select the template folder and the fields appear automatically in the sidebar.
 Build Your Own Template
@@ -49,8 +55,7 @@ Node.js — backend and file system operations
 Tailwind CSS — styling
 Worker Threads — non-blocking render pipeline
 
-![Build](https://github.com/user-attachments/assets/dfd4026f-41ba-4612-866f-a7af27d3b81e)
 
 
+![Import Template](https://github.com/user-attachments/assets/0ada3649-2ae3-4cc3-a351-9071ef79ec9e)
 
-![Import Template](https://github.com/user-attachments/assets/f45134d8-4f4e-4240-85bc-5ef6432f8ab
