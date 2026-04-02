@@ -9,7 +9,7 @@ Under the hood, Acces Studio is powered by the Remotion rendering engine — the
 Download
 Download the latest version for Windows here:
 https://github.com/ayomide20000005/acces-studio/releases/latest
-Mac and Linux support coming soon.
+
 
 
 ![Build](https://github.com/user-attachments/assets/02fddc05-fdd8-48b7-be00-efa3c59023a7)
