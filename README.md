@@ -2,7 +2,7 @@
 
 
 Acces Studio
-Create professional videos — no skills needed. Free. Offline. Forever.
+Create professional videos — no skills needed.
 Acces Studio is a free desktop video creation tool built for everyone. No design experience, no subscriptions, no internet connection required. Just open the app, pick a template, fill in your details, and export a professional video in minutes.
 Under the hood, Acces Studio is powered by the Remotion rendering engine — the same technology used by professional video tools — giving you smooth, high-quality output every time.
 
