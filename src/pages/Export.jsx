@@ -65,7 +65,7 @@ export default function Export({ projectData, onBack, onHome, theme }) {
                 Export Video
               </h2>
               <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
-                Renders locally — no internet needed
+                Renders locally 
               </p>
             </div>
             <button

@@ -7,7 +7,6 @@ import FieldEditor from '../components/FieldEditor'
 
 const templateFields = {
 
-  // ── Product Launch ──
   'product-launch': [
     { key: 'productName', label: 'Product Name', type: 'text', placeholder: 'e.g. iPhone 16' },
     { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'e.g. The future is here' },
@@ -51,7 +50,6 @@ const templateFields = {
     { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 
-  // ── Promotional Video ──
   'promotional-video': [
     { key: 'brandName', label: 'Brand Name', type: 'text', placeholder: 'e.g. Nike' },
     { key: 'offer', label: 'Offer', type: 'text', placeholder: 'e.g. Summer Sale' },
@@ -85,7 +83,6 @@ const templateFields = {
     { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 
-  // ── Intro Outro ──
   'intro-outro': [
     { key: 'channelName', label: 'Channel Name', type: 'text', placeholder: 'e.g. My Channel' },
     { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'e.g. Subscribe for more' },
@@ -102,7 +99,7 @@ const templateFields = {
     { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 
-  // ── Social Media Clip ──
+
   'social-media-clip': [
     { key: 'hookText', label: 'Hook Text', type: 'text', placeholder: 'e.g. Wait for it...' },
     { key: 'revealText', label: 'Reveal Text', type: 'text', placeholder: 'e.g. Mind = Blown 🤯' },
@@ -120,7 +117,6 @@ const templateFields = {
     { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 
-  // ── Pitch Deck Video ──
   'pitch-deck-video': [
     { key: 'companyName', label: 'Company Name', type: 'text', placeholder: 'e.g. Acces Studio' },
     { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'e.g. Changing the way the world works' },
