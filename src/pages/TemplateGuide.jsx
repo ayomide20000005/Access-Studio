@@ -446,7 +446,7 @@ export default function TemplateGuide({ onClose }) {
             {activeSection === 'converting' && (
               <div className="flex flex-col gap-4">
                 <p className="text-sm" style={{ color: 'var(--text)' }}>
-                  Found a Remotion template online? Convert it to Acces Studio format using AI in 4 steps.
+                  Found a Remotion template online? Convert and Integrate it to Acces Studio format using AI in 4 steps.
                 </p>
                 {[
                   { step: '1', title: 'Download the template', desc: 'Find any Remotion template on GitHub. Download the folder and copy the composition file contents.' },
