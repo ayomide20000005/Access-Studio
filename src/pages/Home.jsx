@@ -225,7 +225,7 @@ export default function Home({ onTemplateSelect, theme }) {
           What are you creating today?
         </h1>
         <p className="text-sm" style={{ color: 'var(--muted)' }}>
-          Pick a template and your video builds itself — no timeline, no complexity.
+          Pick a template and your video builds itself no timeline, no complexity.
         </p>
       </div>
 
@@ -242,7 +242,7 @@ export default function Home({ onTemplateSelect, theme }) {
               border: `1px solid ${activeTab === tab ? 'var(--primary)' : 'var(--border)'}`,
             }}
           >
-            {tab === 'templates' ? '✦ Templates' : `📦 My Templates${userTemplates.length > 0 ? ` (${userTemplates.length})` : ''}`}
+            {tab === 'templates' ? '✦ Templates' : ` My Templates${userTemplates.length > 0 ? ` (${userTemplates.length})` : ''}`}
           </button>
         ))}
         {activeTab === 'templates' && (
