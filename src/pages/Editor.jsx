@@ -23,7 +23,6 @@ const templateFields = {
     { key: 'fontFamily', label: 'Font', type: 'font' },
   ],
 
-  // ── Demo Video ──
   'demo-video': [
     { key: 'productName', label: 'Product Name', type: 'text', placeholder: 'e.g. Acces Studio' },
     { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'e.g. Create videos in minutes' },
