@@ -200,7 +200,7 @@ export default function Home({ onTemplateSelect, theme }) {
               color: 'var(--text)',
             }}
           >
-            ⬆ Import Template
+            ⬆ Import Templates
           </button>
           <button
             onClick={() => setShowGuide(true)}
