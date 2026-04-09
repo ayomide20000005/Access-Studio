@@ -211,7 +211,7 @@ export default function Home({ onTemplateSelect, theme }) {
               color: 'var(--text)',
             }}
           >
-            📖 Build a Template
+            📖 Build a Template Guide
           </button>
         </div>
 
