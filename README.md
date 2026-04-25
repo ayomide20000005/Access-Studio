@@ -27,7 +27,7 @@ Multi-core rendering for faster exports
 100% offline — no account, no internet, no subscription required
 Free forever
 
-How to Use
+How to Use acces 
 
 Download and install Acces Studio
 Pick a template from the home screen
