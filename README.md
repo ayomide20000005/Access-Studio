@@ -25,7 +25,6 @@ Full style controls — colors, fonts, mood and pace options per template
 Export to MP4 or GIF in 720p, 1080p or 4K
 Multi-core rendering for faster exports
 100% offline — no account, no internet, no subscription required
-Free forever
 
 How to Use
 
