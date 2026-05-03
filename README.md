@@ -2,7 +2,7 @@
 
 
 Acces Studio
-Create professional videos — no skills needed.
+Create professional videos no skills needed.
 Acces Studio is a desktop video creation tool built for everyone. No design experience, no subscriptions, no internet connection required. Just open the app, pick a template, fill in your details, and export a professional video in minutes.
 Under the hood, Acces Studio is powered by the Remotion rendering engine, the same technology used by professional video tools — giving you smooth, high-quality output every time.
 
@@ -17,7 +17,7 @@ https://github.com/ayomide20000005/acces-studio/releases/latest
 
 Features
 
-10 built-in professional video templates covering product launches, social media, tutorials, events, pitch decks and more
+10 built in professional video templates covering product launches, social media, tutorials, events, pitch decks and more
 Live preview — see your changes update in real time as you type
 Custom template import — download and import community-built templates with one click
 AI-powered template system — built-in prompts let you generate brand new templates or convert any existing Remotion template using Claude, ChatGPT or any AI
